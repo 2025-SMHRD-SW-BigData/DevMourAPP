@@ -8,7 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.kakao.sdk.auth.AuthApiClient
+
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
@@ -18,14 +18,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // 키 해시 출력 (카카오 개발자 콘솔에 등록할 키 해시)
-        Log.d("test", "keyhash: ${com.kakao.sdk.common.util.Utility.getKeyHash(this)}")
+        // 키 해시 출력 (카카오 개발자 콘솔에 등록할 키 해시) - 한 번만 출력
+        try {
+            val keyHash = com.kakao.sdk.common.util.Utility.getKeyHash(this)
+            Log.d("test", "keyhash: $keyHash")
+        } catch (e: Exception) {
+            Log.e("test", "키 해시 생성 실패: ${e.message}")
+        }
         
         // 카카오 로그인 버튼 클릭 리스너
         val btnKakaoLogin = findViewById<android.widget.ImageButton>(R.id.btn_kakao)
