@@ -24,6 +24,9 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        // 키 해시 출력 (카카오 개발자 콘솔에 등록할 키 해시)
+        Log.d("test", "keyhash: ${com.kakao.sdk.common.util.Utility.getKeyHash(this)}")
+        
         // 카카오 로그인 버튼 클릭 리스너
         val btnKakaoLogin = findViewById<android.widget.ImageButton>(R.id.btn_kakao)
         
@@ -31,7 +34,9 @@ class MainActivity : AppCompatActivity() {
         val callback: (com.kakao.sdk.auth.model.OAuthToken?, Throwable?) -> Unit = { token, error ->
             if (error != null) {
                 Toast.makeText(this, "카카오 계정으로 로그인 실패!", Toast.LENGTH_SHORT).show()
-                Log.e("test", "카카오 계정으로 로그인 실패! " + error.message)
+                Log.e("test", "카카오 계정으로 로그인 실패! 에러: " + error.message)
+                Log.e("test", "에러 타입: " + error.javaClass.simpleName)
+                Log.e("test", "전체 에러: " + error.toString())
             } else if (token != null) {
                 Toast.makeText(this, "카카오 계정으로 로그인 성공!", Toast.LENGTH_SHORT).show()
                 Log.d("test", "카카오 계정으로 로그인 성공! " + token.accessToken)
@@ -42,23 +47,29 @@ class MainActivity : AppCompatActivity() {
         }
         
         btnKakaoLogin.setOnClickListener {
+            Log.d("test", "카카오 로그인 버튼 클릭됨")
+            
             if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
+                Log.d("test", "카카오톡 앱 설치됨 - 카카오톡으로 로그인 시도")
                 UserApiClient.instance.loginWithKakaoTalk(this) { token, error ->
                     if (error != null) {
                         Toast.makeText(this, "카카오톡으로 로그인 실패!", Toast.LENGTH_SHORT).show()
-                        Log.e("test", "카카오톡으로 로그인 실패!" + error.message)
+                        Log.e("test", "카카오톡으로 로그인 실패! 에러: " + error.message)
+                        Log.e("test", "에러 타입: " + error.javaClass.simpleName)
                         if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+                            Log.d("test", "사용자가 로그인을 취소함")
                             return@loginWithKakaoTalk
                         }
                     } else if (token != null) {
                         Toast.makeText(this, "카카오톡으로 로그인 성공!", Toast.LENGTH_SHORT).show()
-                        Log.d("test", "카카오톡으로 로그인 성공! " + token.accessToken)
+                        Log.d("test", "카카오톡으로 로그인 성공! 토큰: " + token.accessToken)
                         val intent = Intent(this, MainActivity2::class.java)
                         startActivity(intent)
                         finish()
                     }
                 }
             } else {
+                Log.d("test", "카카오톡 앱 미설치 - 카카오계정으로 로그인 시도")
                 // kakao로 로그인 하지 못할 경우 계정으로 로그인 시도
                 UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
             }
