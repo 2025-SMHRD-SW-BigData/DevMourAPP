@@ -20,19 +20,18 @@ class MainActivity2 : AppCompatActivity() {
             insets
         }
 
-        // 카카오 로그아웃 버튼 클릭 리스너
+        // 카카오 연결 끊기 버튼 클릭 리스너
         val btnLogout = findViewById<android.widget.Button>(R.id.btn_logout)
         btnLogout.setOnClickListener {
-            // 성공 여부와 관계 없이 토큰 삭제.
-            UserApiClient.instance.logout { error ->
+            UserApiClient.instance.unlink { error ->
                 if (error != null) {
-                    Log.e("test", "로그아웃 실패. SDK에서 토큰 삭제됨", error)
+                    Log.e("test", "연결 끊기 실패", error)
                 } else {
-                    Log.e("test", "로그아웃 실패. SDK에서 토큰 삭제됨", error)
+                    Log.i("test", "연결 끊기 성공. SDK에서 토큰 삭제 됨")
                 }
             }
             
-            // 로그아웃 후 로그인 화면으로 돌아가기
+            // 연결 끊기 후 로그인 화면으로 돌아가기
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
