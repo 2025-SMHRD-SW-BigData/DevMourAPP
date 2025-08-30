@@ -74,5 +74,21 @@ class MainActivity : AppCompatActivity() {
                 UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
             }
         }
+
+        // 구글 로그인 버튼 클릭 리스너
+        val btnGoogleLogin = findViewById<android.widget.ImageButton>(R.id.googleButton)
+        btnGoogleLogin.setOnClickListener {
+            Log.d("test", "구글 로그인 버튼 클릭됨")
+            Toast.makeText(this, "구글 로그인 기능은 준비 중입니다.", Toast.LENGTH_SHORT).show()
+            // TODO: 구글 로그인 구현
+        }
+
+        // 네이버 로그인 버튼 클릭 리스너
+        val btnNaverLogin = findViewById<android.widget.ImageButton>(R.id.naverButton)
+        btnNaverLogin.setOnClickListener {
+            Log.d("test", "네이버 로그인 버튼 클릭됨")
+            Toast.makeText(this, "네이버 로그인 기능은 준비 중입니다.", Toast.LENGTH_SHORT).show()
+            // TODO: 네이버 로그인 구현
+        }
     }
 }
