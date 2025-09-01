@@ -22,11 +22,11 @@
             android:value="bb348933b27cba1d726cf4e152588cb0" />
 
         <activity
-            android:name=".MainActivity3"
+            android:name=".LoginActivity2"
             android:exported="false" />
 
         <activity
-            android:name=".MainActivity2"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

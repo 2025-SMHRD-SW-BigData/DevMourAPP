@@ -22,7 +22,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 
-class MainActivity2 : AppCompatActivity() {
+class LoginActivity : AppCompatActivity() {
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN = 1000
@@ -30,7 +30,7 @@ class MainActivity2 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.login)
+        setContentView(R.layout.activity_login)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -58,7 +58,7 @@ class MainActivity2 : AppCompatActivity() {
             } else if (token != null) {
                 Toast.makeText(this, "카카오 계정으로 로그인 성공!", Toast.LENGTH_SHORT).show()
                 Log.d("test", "카카오 계정으로 로그인 성공! " + token.accessToken)
-                val intent = Intent(this, MainActivity3::class.java)
+                val intent = Intent(this, LoginActivity2::class.java)
                 startActivity(intent)
                 finish()
             }
@@ -81,7 +81,7 @@ class MainActivity2 : AppCompatActivity() {
                     } else if (token != null) {
                         Toast.makeText(this, "카카오톡으로 로그인 성공!", Toast.LENGTH_SHORT).show()
                         Log.d("test", "카카오톡으로 로그인 성공! 토큰: " + token.accessToken)
-                        val intent = Intent(this, MainActivity3::class.java)
+                        val intent = Intent(this, LoginActivity2::class.java)
                         startActivity(intent)
                         finish()
                     }
@@ -99,7 +99,7 @@ class MainActivity2 : AppCompatActivity() {
                 override fun onSuccess() {
                     val token = NaverIdLoginSDK.getAccessToken()
                     Log.d("test", "네이버 로그인 성공: accessToken=$token")
-                    val intent = Intent(this@MainActivity2, MainActivity3::class.java)
+                    val intent = Intent(this@LoginActivity, LoginActivity2::class.java)
                     startActivity(intent)
                     finish()
                 }
@@ -143,7 +143,7 @@ class MainActivity2 : AppCompatActivity() {
                 Log.d("test", "구글 로그인 성공: email=$email, idToken=$idToken")
                 Toast.makeText(this, "구글 로그인 성공: $email", Toast.LENGTH_SHORT).show()
 
-                val intent = Intent(this, MainActivity3::class.java)
+                val intent = Intent(this, LoginActivity2::class.java)
                 startActivity(intent)
                 finish()
             } catch (e: ApiException) {
