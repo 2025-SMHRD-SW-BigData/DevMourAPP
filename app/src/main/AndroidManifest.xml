@@ -28,6 +28,11 @@
             android:name="com.kakao.sdk.AppKey"
             android:value="bb348933b27cba1d726cf4e152588cb0" />
 
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
         <activity
             android:name=".LoginActivity2"
             android:exported="false" />
