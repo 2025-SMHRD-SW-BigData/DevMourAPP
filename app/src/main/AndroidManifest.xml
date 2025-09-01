@@ -69,9 +69,6 @@
                 android:name="com.naver.maps.map.NCP_KEY_ID"
                 android:value="ofmzo20kae" />
 
-
-
-
     </application>
 
 </manifest>
