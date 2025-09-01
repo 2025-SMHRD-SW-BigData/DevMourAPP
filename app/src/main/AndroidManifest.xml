@@ -2,12 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <!-- 카카오 로그인에 필요한 권한 -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".auth.AuthApplication"
         android:allowBackup="true"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -15,7 +22,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DevMour">
-        
+
                 <!-- 카카오 네이티브 앱 키 설정 -->
         <meta-data
             android:name="com.kakao.sdk.AppKey"
@@ -44,7 +51,7 @@
             </intent-filter>
 
         </activity>
-        
+
                 <!-- 카카오 로그인 콜백 액티비티 -->
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
@@ -58,8 +65,9 @@
                     android:scheme="kakaobb348933b27cba1d726cf4e152588cb0" />
             </intent-filter>
         </activity>
-        
-
+            <meta-data
+                android:name="com.naver.maps.map.NCP_KEY_ID"
+                android:value="ofmzo20kae" />
 
     </application>
 
