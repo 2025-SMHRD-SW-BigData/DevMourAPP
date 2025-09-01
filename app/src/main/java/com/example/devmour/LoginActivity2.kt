@@ -20,7 +20,7 @@ class LoginActivity2 : AppCompatActivity() {
             insets
         }
 
-        // 로그아웃 버튼 클릭 리스너 (카카오 + 네이버)
+        // 로그아웃 버튼 리스너 (카카오 + 네이버)
         val btnLogout = findViewById<android.widget.Button>(R.id.btn_logout)
         btnLogout.setOnClickListener {
             // 카카오 연결 끊기
