@@ -123,50 +123,56 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     marker.map = naverMap
                     marker.icon = MarkerIcons.BLACK
                     
-                    // 심각도에 따라 다른 색상 적용
-                    marker.iconTintColor = when (roadData.severityLevel) {
-                        "위험" -> Color.RED
-                        "경고" -> Color.rgb(255, 165, 0) // 주황색
-                        "안전" -> Color.GREEN
-                        else -> Color.GRAY
+                    // 색상 적용 - 침수인 경우 파란색, 그 외에는 심각도에 따라
+                    marker.iconTintColor = when (roadData.anomalyType) {
+                        "침수" -> Color.BLUE // 침수는 파란색
+                        else -> when (roadData.severityLevel) {
+                            "위험" -> Color.RED
+                            "경고" -> Color.rgb(255, 165, 0) // 주황색
+                            "안전" -> Color.GREEN
+                            else -> Color.GRAY
+                        }
                     }
                     
                     marker.tag = "ROAD_${roadData.roadIdx}"
 
-                    // 마커 클릭 이벤트 설정
+                    // 마커 클릭 이벤트 설정 - 침수인 경우에만 다이얼로그 표시
                     marker.setOnClickListener { overlay ->
-                        val severityText = when (roadData.severityLevel) {
-                            "위험" -> "위험"
-                            "경고" -> "경고"
-                            "안전" -> "안전"
-                            else -> "알 수 없음"
-                        }
-                        
-                        val severityColor = when (roadData.severityLevel) {
-                            "위험" -> Color.RED
-                            "경고" -> Color.rgb(255, 165, 0)
-                            "안전" -> Color.GREEN
-                            else -> Color.GRAY
-                        }
-                        
-                        val message = "도로 이상 현상 정보\n\n" +
-                                "• 이상 유형: ${roadData.anomalyType}\n" +
-                                "• 발견일시: ${roadData.detectedAt}\n" +
-                                "• 심각도: $severityText"
-                        
-                        val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
-                            .setTitle("도로 이상 현상 정보")
-                            .setMessage(message)
-                            .setPositiveButton("확인") { dialog, _ ->
-                                dialog.dismiss()
+                        // anomaly_type이 '침수'인 경우에만 다이얼로그 표시
+                        if (roadData.anomalyType == "침수") {
+                            val severityText = when (roadData.severityLevel) {
+                                "위험" -> "위험"
+                                "경고" -> "경고"
+                                "안전" -> "안전"
+                                else -> "알 수 없음"
                             }
-                            .create()
-                        
-                        alertDialog.show()
-                        
-                        // 제목 텍스트 색상 설정
-                        val titleTextView = alertDialog.findViewById<android.widget.TextView>(android.R.id.title)
-                        titleTextView?.setTextColor(severityColor)
+                            
+                            val severityColor = when (roadData.severityLevel) {
+                                "위험" -> Color.RED
+                                "경고" -> Color.rgb(255, 165, 0)
+                                "안전" -> Color.GREEN
+                                else -> Color.GRAY
+                            }
+                            
+                            val message = "도로 이상 현상 정보\n\n" +
+                                    "• 이상 유형: ${roadData.anomalyType}\n" +
+                                    "• 발견일시: ${roadData.detectedAt}\n" +
+                                    "• 심각도: $severityText"
+                            
+                            val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
+                                .setTitle("도로 이상 현상 정보")
+                                .setMessage(message)
+                                .setPositiveButton("확인") { dialog, _ ->
+                                    dialog.dismiss()
+                                }
+                                .create()
+                            
+                            alertDialog.show()
+                            
+                            // 제목 텍스트 색상 설정
+                            val titleTextView = alertDialog.findViewById<android.widget.TextView>(android.R.id.title)
+                            titleTextView?.setTextColor(severityColor)
+                        }
                         
                         true // 이벤트 처리 완료
                     }
