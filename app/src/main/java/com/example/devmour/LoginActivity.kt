@@ -29,6 +29,17 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ 여기에 추가
+        val SKIP_LOGIN = true  // 개발 중일 때 true로 설정
+
+        if (SKIP_LOGIN) {
+            val intent = Intent(this, MainActivity::class.java)  // 지도가 있는 액티비티
+            startActivity(intent)
+            finish()
+            return  // 아래 기존 로그인 코드들은 실행되지 않음
+        }
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_login)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
