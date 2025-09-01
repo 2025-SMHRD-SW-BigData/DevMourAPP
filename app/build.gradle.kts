@@ -27,11 +27,15 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
+    }
+    
+    lint {
+        disable += "AppLinkUrlError"
     }
 }
 
@@ -46,9 +50,15 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.kakao.sdk:v2-all:2.20.1") // 전체 모듈 설치, 2.11.0 버전부터 지원
-    implementation("com.kakao.sdk:v2-user:2.20.1") // 카카오 로그인 API 모듈
-    implementation("com.kakao.sdk:v2-share:2.20.1") // 카카오톡 공유 API 모듈
-    implementation("com.kakao.sdk:v2-friend:2.20.1") // 피커 API 모듈
-    implementation("com.kakao.sdk:v2-navi:2.20.1") // 카카오내비 API 모듈
-    implementation("com.kakao.sdk:v2-cert:2.20.1") // 카카오톡 인증 서비스 API 모듈
+
+    // 네이버 OAuth
+    implementation("com.navercorp.nid:oauth:5.9.0") // 최신 안정버전으로 교체 가능
+
+    // HTTP 클라이언트 (네이버 API 호출용)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // 구글
+    implementation("com.google.android.gms:play-services-auth:21.2.0") // 최신 버전 확인 가능
 }

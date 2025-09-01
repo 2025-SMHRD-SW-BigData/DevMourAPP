@@ -16,24 +16,36 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DevMour">
         
-        <!-- 카카오 네이티브 앱 키 설정 -->
+                <!-- 카카오 네이티브 앱 키 설정 -->
         <meta-data
             android:name="com.kakao.sdk.AppKey"
             android:value="bb348933b27cba1d726cf4e152588cb0" />
-        
+
+        <activity
+            android:name=".MainActivity3"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity2"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- ✅ 네이버 로그인 콜백 (Redirect URI: naver{ClientID}://authorize) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:host="authorize"
+                    android:scheme="naver2zTcXI0_lYuvpxRezRfa" />  <!-- 예: naverabcd1234 -->
+
+            </intent-filter>
+
         </activity>
         
-        <!-- 카카오 로그인 콜백 액티비티 -->
+                <!-- 카카오 로그인 콜백 액티비티 -->
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
             android:exported="true">
@@ -46,6 +58,9 @@
                     android:scheme="kakaobb348933b27cba1d726cf4e152588cb0" />
             </intent-filter>
         </activity>
+        
+
+
     </application>
 
 </manifest>

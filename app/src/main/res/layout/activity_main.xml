@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFF5F5"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity2">
 
     <Space
         android:layout_width="match_parent"
@@ -81,13 +81,13 @@
         android:layout_marginBottom="20dp"
         android:background="@drawable/google_login"
         android:contentDescription="구글 로그인"
-        app:layout_constraintBottom_toTopOf="@id/naverButton"
+        app:layout_constraintBottom_toTopOf="@id/btn_naver"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <!-- 6. 네이버 로그인 버튼 (맨 아래) -->
     <ImageButton
-        android:id="@+id/naverButton"
+        android:id="@+id/btn_naver"
         android:layout_width="350dp"
         android:layout_height="62dp"
         android:layout_marginBottom="40dp"
