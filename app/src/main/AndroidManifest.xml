@@ -23,6 +23,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DevMour">
 
+        <!-- 다국어 지원 설정 추가 -->
+        <meta-data
+            android:name="android.app.lib_name"
+            android:value="" />
+
                 <!-- 카카오 네이티브 앱 키 설정 -->
         <meta-data
             android:name="com.kakao.sdk.AppKey"
@@ -51,7 +56,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:host="authorize"
-                    android:scheme="naver2zTcXI0_lYuvpxRezRfa" />  <!-- 예: naverabcd1234 -->
+                    android:scheme= "naver2zTcXI0_lYuvpxRezRfa" /> <!-- 예: naverabcd1234 -->
 
             </intent-filter>
 
