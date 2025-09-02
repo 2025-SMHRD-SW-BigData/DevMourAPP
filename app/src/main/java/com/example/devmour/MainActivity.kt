@@ -235,8 +235,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     val marker = Marker()
 
                     // 겹치지 않도록 약간씩 위치 조정
-                    val offsetLat = (index % 5) * 0.001
-                    val offsetLng = (index / 5) * 0.001
+                    val offsetLat = (index % 5) * 0.0001
+                    val offsetLng = (index / 5) * 0.0001
 
                     marker.position = LatLng(
                         roadData.latitude + offsetLat,
@@ -246,7 +246,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     // 아이콘 이미지를 drawable 리소스로 교체
                     val iconResId = when (roadData.anomalyType) {
-                        "침수" -> R.drawable.marker_flood
+                        "침수" -> R.drawable.marker_blue
                         else -> when (roadData.severityLevel) {
                             "위험" -> R.drawable.marker_red
                             "경고" -> R.drawable.marker_orange
@@ -483,7 +483,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // 카메라 설정 (광주 지역으로 설정)
         val cameraPosition = CameraPosition(
             LatLng(35.1595, 126.8526),
-            18.0,
+            16.0,
             20.0,
             0.0
         )
