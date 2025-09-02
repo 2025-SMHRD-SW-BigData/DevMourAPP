@@ -7,6 +7,7 @@ android {
     namespace = "com.example.devmour"
     compileSdk = 36
 
+
     defaultConfig {
         applicationId = "com.example.devmour"
         minSdk = 24
