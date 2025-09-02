@@ -6,9 +6,12 @@ import android.graphics.BitmapFactory
 import java.util.ArrayDeque
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
+import android.widget.EditText
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -27,28 +30,28 @@ import com.example.devmour.data.Road as RoadData
 import com.example.devmour.data.RoadControl as RoadControlData
 import com.example.devmour.viewmodel.RoadViewModel
 import com.example.devmour.viewmodel.RoadControlViewModel
-import com.example.devmour.viewmodel.GeocodingViewModel
-import android.widget.EditText
-import android.widget.Button
-import android.view.KeyEvent
-import android.view.inputmethod.EditorInfo
-import com.naver.maps.map.CameraAnimation
-import com.naver.maps.map.CameraUpdate
+
+// 광주시 위치 데이터 클래스
+data class LocationData(
+    val name: String,
+    val latitude: Double,
+    val longitude: Double,
+    val type: String, // "구" 또는 "동"
+    val parent: String? = null // 동의 경우 상위 구 이름
+)
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var searchEditText: EditText
 
     private var LOCATION_PERMISSION = 1004
     private lateinit var naverMap: NaverMap
     private lateinit var locationSource: FusedLocationSource
     private lateinit var roadViewModel: RoadViewModel
     private lateinit var roadControlViewModel: RoadControlViewModel
-    private lateinit var geocodingViewModel: GeocodingViewModel
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val PERMISSION = arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-    
-    // 검색 UI 요소들
-    private lateinit var etSearch: EditText
-    private lateinit var btnSearch: Button
     
     // 네비게이션 바 요소들
     private lateinit var btnNotification: android.view.View
@@ -58,28 +61,157 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     // 마커 리스트를 저장할 변수
     private val markers = mutableListOf<Marker>()
     private val controlMarkers = mutableListOf<Marker>()
+    private val locationMarkers = mutableListOf<Marker>() // 위치 검색 마커
     private val overlayImageCache = mutableMapOf<Int, OverlayImage>()
+    
+    // 광주시 위치 데이터 (하드코딩) - 실제 좌표 사용
+    private val gwangjuLocations = listOf(
+        // 광산구 (실제 중심 좌표)
+        LocationData("광산구", 35.1392, 126.7940, "구"),
+        LocationData("도산동", 35.1450, 126.7850, "동", "광산구"),
+        LocationData("신흥동", 35.1350, 126.7850, "동", "광산구"),
+        LocationData("어룡동", 35.1400, 126.8000, "동", "광산구"),
+        LocationData("우산동", 35.1500, 126.7900, "동", "광산구"),
+        LocationData("운남동", 35.1300, 126.8000, "동", "광산구"),
+        LocationData("월곡동", 35.1450, 126.8100, "동", "광산구"),
+        LocationData("월봉동", 35.1350, 126.8100, "동", "광산구"),
+        LocationData("임곡동", 35.1500, 126.7800, "동", "광산구"),
+        LocationData("장덕동", 35.1400, 126.7900, "동", "광산구"),
+        LocationData("정광동", 35.1300, 126.7900, "동", "광산구"),
+        LocationData("평동", 35.1450, 126.8000, "동", "광산구"),
+        LocationData("하남동", 35.1350, 126.8000, "동", "광산구"),
+        LocationData("황룡동", 35.1500, 126.8100, "동", "광산구"),
+        
+        // 남구 (실제 중심 좌표)
+        LocationData("남구", 35.1333, 126.9000, "구"),
+        LocationData("구동", 35.1400, 126.8950, "동", "남구"),
+        LocationData("노대동", 35.1300, 126.8950, "동", "남구"),
+        LocationData("대촌동", 35.1350, 126.9050, "동", "남구"),
+        LocationData("덕남동", 35.1250, 126.9050, "동", "남구"),
+        LocationData("도천동", 35.1400, 126.9050, "동", "남구"),
+        LocationData("방림동", 35.1300, 126.9050, "동", "남구"),
+        LocationData("백운동", 35.1350, 126.8950, "동", "남구"),
+        LocationData("봉선동", 35.1250, 126.8950, "동", "남구"),
+        LocationData("사직동", 35.1400, 126.9000, "동", "남구"),
+        LocationData("송하동", 35.1300, 126.9000, "동", "남구"),
+        LocationData("양림동", 35.1350, 126.9000, "동", "남구"),
+        LocationData("월산동", 35.1250, 126.9000, "동", "남구"),
+        LocationData("주월동", 35.1400, 126.9100, "동", "남구"),
+        LocationData("지석동", 35.1300, 126.9100, "동", "남구"),
+        LocationData("진월동", 35.1350, 126.9100, "동", "남구"),
+        LocationData("치평동", 35.1250, 126.9100, "동", "남구"),
+        LocationData("하동", 35.1400, 126.9150, "동", "남구"),
+        LocationData("효덕동", 35.1300, 126.9150, "동", "남구"),
+        
+        // 동구 (실제 중심 좌표)
+        LocationData("동구", 35.1544, 126.9233, "구"),
+        LocationData("계림동", 35.1600, 126.9180, "동", "동구"),
+        LocationData("광산동", 35.1500, 126.9180, "동", "동구"),
+        LocationData("내남동", 35.1550, 126.9280, "동", "동구"),
+        LocationData("대인동", 35.1450, 126.9280, "동", "동구"),
+        LocationData("동명동", 35.1600, 126.9280, "동", "동구"),
+        LocationData("불로동", 35.1500, 126.9280, "동", "동구"),
+        LocationData("산수동", 35.1550, 126.9180, "동", "동구"),
+        LocationData("서석동", 35.1450, 126.9180, "동", "동구"),
+        LocationData("소태동", 35.1600, 126.9230, "동", "동구"),
+        LocationData("수기동", 35.1500, 126.9230, "동", "동구"),
+        LocationData("용산동", 35.1550, 126.9230, "동", "동구"),
+        LocationData("지산동", 35.1450, 126.9230, "동", "동구"),
+        LocationData("지원동", 35.1600, 126.9330, "동", "동구"),
+        LocationData("충장로", 35.1500, 126.9330, "동", "동구"),
+        LocationData("학동", 35.1550, 126.9330, "동", "동구"),
+        LocationData("황금동", 35.1450, 126.9330, "동", "동구"),
+        
+        // 북구 (실제 중심 좌표)
+        LocationData("북구", 35.1747, 126.9120, "구"),
+        LocationData("각화동", 35.1800, 126.9070, "동", "북구"),
+        LocationData("건국동", 35.1700, 126.9070, "동", "북구"),
+        LocationData("금곡동", 35.1750, 126.9170, "동", "북구"),
+        LocationData("남동", 35.1650, 126.9170, "동", "북구"),
+        LocationData("대촌동", 35.1800, 126.9170, "동", "북구"),
+        LocationData("덕의동", 35.1700, 126.9170, "동", "북구"),
+        LocationData("동림동", 35.1750, 126.9070, "동", "북구"),
+        LocationData("두암동", 35.1650, 126.9070, "동", "북구"),
+        LocationData("망월동", 35.1800, 126.9120, "동", "북구"),
+        LocationData("매곡동", 35.1700, 126.9120, "동", "북구"),
+        LocationData("문흥동", 35.1750, 126.9120, "동", "북구"),
+        LocationData("본촌동", 35.1650, 126.9120, "동", "북구"),
+        LocationData("사직동", 35.1800, 126.9220, "동", "북구"),
+        LocationData("삼각동", 35.1700, 126.9220, "동", "북구"),
+        LocationData("상무동", 35.1750, 126.9220, "동", "북구"),
+        LocationData("생용동", 35.1650, 126.9220, "동", "북구"),
+        LocationData("수곡동", 35.1800, 126.9270, "동", "북구"),
+        LocationData("신안동", 35.1700, 126.9270, "동", "북구"),
+        LocationData("양산동", 35.1750, 126.9270, "동", "북구"),
+        LocationData("연제동", 35.1650, 126.9270, "동", "북구"),
+        LocationData("오룡동", 35.1800, 126.9320, "동", "북구"),
+        LocationData("오치동", 35.1700, 126.9320, "동", "북구"),
+        LocationData("용두동", 35.1750, 126.9320, "동", "북구"),
+        LocationData("운암동", 35.1650, 126.9320, "동", "북구"),
+        LocationData("월출동", 35.1800, 126.9370, "동", "북구"),
+        LocationData("유동", 35.1700, 126.9370, "동", "북구"),
+        LocationData("임동", 35.1750, 126.9370, "동", "북구"),
+        LocationData("장등동", 35.1650, 126.9370, "동", "북구"),
+        LocationData("중흥동", 35.1800, 126.9420, "동", "북구"),
+        LocationData("지야동", 35.1700, 126.9420, "동", "북구"),
+        LocationData("진월동", 35.1750, 126.9420, "동", "북구"),
+        LocationData("청풍동", 35.1650, 126.9420, "동", "북구"),
+        LocationData("충효동", 35.1800, 126.9470, "동", "북구"),
+        LocationData("태령동", 35.1700, 126.9470, "동", "북구"),
+        LocationData("풍향동", 35.1750, 126.9470, "동", "북구"),
+        LocationData("화암동", 35.1650, 126.9470, "동", "북구"),
+        
+        // 서구 (실제 중심 좌표)
+        LocationData("서구", 35.1267, 126.8667, "구"),
+        LocationData("광천동", 35.1320, 126.8610, "동", "서구"),
+        LocationData("내방동", 35.1220, 126.8610, "동", "서구"),
+        LocationData("농성동", 35.1270, 126.8710, "동", "서구"),
+        LocationData("덕흥동", 35.1170, 126.8710, "동", "서구"),
+        LocationData("마륵동", 35.1320, 126.8710, "동", "서구"),
+        LocationData("매월동", 35.1220, 126.8710, "동", "서구"),
+        LocationData("벽진동", 35.1270, 126.8760, "동", "서구"),
+        LocationData("비아동", 35.1170, 126.8760, "동", "서구"),
+        LocationData("사호동", 35.1320, 126.8760, "동", "서구"),
+        LocationData("서창동", 35.1220, 126.8760, "동", "서구"),
+        LocationData("세하동", 35.1270, 126.8810, "동", "서구"),
+        LocationData("송정동", 35.1170, 126.8810, "동", "서구"),
+        LocationData("신촌동", 35.1320, 126.8810, "동", "서구"),
+        LocationData("양동", 35.1220, 126.8810, "동", "서구"),
+        LocationData("양림동", 35.1270, 126.8860, "동", "서구"),
+        LocationData("염주동", 35.1170, 126.8860, "동", "서구"),
+        LocationData("오정동", 35.1320, 126.8860, "동", "서구"),
+        LocationData("용두동", 35.1220, 126.8860, "동", "서구"),
+        LocationData("유촌동", 35.1270, 126.8910, "동", "서구"),
+        LocationData("월산동", 35.1170, 126.8910, "동", "서구"),
+        LocationData("월정동", 35.1320, 126.8910, "동", "서구"),
+        LocationData("유덕동", 35.1220, 126.8910, "동", "서구"),
+        LocationData("진월동", 35.1270, 126.8960, "동", "서구"),
+        LocationData("치평동", 35.1170, 126.8960, "동", "서구"),
+        LocationData("풍암동", 35.1320, 126.8960, "동", "서구"),
+        LocationData("하동", 35.1220, 126.8960, "동", "서구"),
+        LocationData("화정동", 35.1270, 126.8960, "동", "서구"),
+        LocationData("환덕동", 35.1170, 126.8960, "동", "서구")
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        Log.d("MainActivity", "onCreate 시작")
 
+
+        Log.d("MainActivity", "onCreate 시작")
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         // ViewModel 초기화
         roadViewModel = ViewModelProvider(this)[RoadViewModel::class.java]
         roadControlViewModel = ViewModelProvider(this)[RoadControlViewModel::class.java]
-        geocodingViewModel = ViewModelProvider(this)[GeocodingViewModel::class.java]
         Log.d("MainActivity", "ViewModel 초기화 완료")
 
         // UI 초기화
-        initSearchUI()
         initNavigationBar()
 
         // 데이터 관찰 설정
         observeRoads()
         observeRoadControls()
-        observeGeocodingResults()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationSource = FusedLocationSource(this@MainActivity, LOCATION_PERMISSION)
@@ -92,35 +224,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         mapFragment!!.getMapAsync(this)
         Log.d("MainActivity", "지도 비동기 로드 요청")
-        
-
-    }
-    
-    private fun initSearchUI() {
-        etSearch = findViewById(R.id.etSearch)
-        btnSearch = findViewById(R.id.btnSearch)
-        
-        // 검색 버튼 클릭
-        btnSearch.setOnClickListener {
-            val query = etSearch.text.toString().trim()
-            if (query.isNotEmpty()) {
-                geocodingViewModel.searchAddress(query)
-            }
-        }
-        
-        // EditText 엔터키 처리
-        etSearch.setOnEditorActionListener { _, actionId, event ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || 
-                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
-                val query = etSearch.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    geocodingViewModel.searchAddress(query)
-                }
-                true
-            } else {
-                false
-            }
-        }
     }
     
     private fun initNavigationBar() {
@@ -151,32 +254,35 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 textView.setTextColor(Color.parseColor("#2f354f"))
             }
         }
-    }
-    
-    private fun observeGeocodingResults() {
-        geocodingViewModel.selectedLocation.observe(this) { address ->
-            address?.let {
-                val lat = it.y.toDouble()
-                val lng = it.x.toDouble()
-                moveToLocation(lat, lng)
-                Log.d("MainActivity", "검색 결과로 이동: ${it.roadAddress}")
+        
+        // 기존 검색 버튼을 위치 검색 기능과 연결
+        val searchButton = findViewById<android.widget.Button>(R.id.btnSearch)
+        val searchEditText = findViewById<android.widget.EditText>(R.id.etSearch)
+        
+        searchButton?.setOnClickListener {
+            val searchQuery = searchEditText.text.toString().trim()
+            if (searchQuery.isNotEmpty()) {
+                val searchResults = searchLocations(searchQuery)
+                if (searchResults.isNotEmpty()) {
+                    // 첫 번째 검색 결과로 이동
+                    moveToLocation(searchResults.first())
+                    android.widget.Toast.makeText(this, "${searchResults.first().name}으로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    android.widget.Toast.makeText(this, "검색 결과가 없습니다", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                android.widget.Toast.makeText(this, "검색어를 입력해주세요", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
         
-        geocodingViewModel.error.observe(this) { errorMessage ->
-            errorMessage?.let {
-                Log.e("MainActivity", "검색 오류: $it")
-                android.widget.Toast.makeText(this, it, android.widget.Toast.LENGTH_SHORT).show()
+        // 엔터키로 검색
+        searchEditText?.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                searchButton.performClick()
+                true
+            } else {
+                false
             }
-        }
-    }
-    
-    private fun moveToLocation(latitude: Double, longitude: Double) {
-        if (::naverMap.isInitialized) {
-            val cameraUpdate = CameraUpdate.scrollTo(LatLng(latitude, longitude))
-                .animate(CameraAnimation.Easing, 1000)
-            naverMap.moveCamera(cameraUpdate)
-            Log.d("MainActivity", "지도 이동: $latitude, $longitude")
         }
     }
     
@@ -188,10 +294,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.d("MainActivity", "현재 통제 마커 수: ${controlMarkers.size}")
             Log.d("MainActivity", "받은 도로 리스트: ${roadList?.size}개")
 
-//            if (roadList != null) {
-//                Log.d("MainActivity", "roadList.size: ${roadList.size}")
-//                Log.d("MainActivity", "roadList.isEmpty(): ${roadList.isEmpty()}")
-//            }
             // null 체크 추가
             if (roadList == null) {
                 Log.w("MainActivity", "도로 리스트가 null임 - 처리중단")
@@ -204,7 +306,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 return@observe
             }
 
-
             // 기존 마커들 제거 (overlays.clear() 대신)
             Log.d("MainActivity", "도로 마커 제거: ${markers.size}개")
             markers.forEach { marker ->
@@ -213,23 +314,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             markers.clear()
             Log.d("MainActivity", "도로 마커들 제거 완료")
 
-//            // 테스트용 마커 1개만 생성 (광주 시내)
-//            val testMarker = Marker()
-//            testMarker.position = LatLng(35.1595, 126.8526) // 현재 카메라 위치와 동일
-//            testMarker.map = naverMap
-//            testMarker.icon = OverlayImage.fromResource(R.drawable.marker_flood)
-//            testMarker.width = 200
-//            testMarker.height = 200
-//            markers.add(testMarker)
-//
-//            Log.d("MainActivity", "테스트 마커 생성: 위치=${testMarker.position}")
-
             // 도로 리스트가 비어있는지 확인
             if (roadList.isEmpty()) {
                 Log.w("MainActivity", "받은 도로 리스트가 비어있음!")
                 return@observe
             }
-// 새로운 도로 마커들 추가
+
+            // 새로운 도로 마커들 추가
             roadList.forEachIndexed { index, roadData ->
                 try {
                     val marker = Marker()
@@ -320,7 +411,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.d("MainActivity", "도로 마커 생성 완료: ${markers.size}개")
             Log.d("MainActivity", "현재 통제 마커 수: ${controlMarkers.size}개 (변경되지 않아야 함)")
 
-// 실제로 지도에 표시된 마커 개수 확인 (가능하다면)
+            // 실제로 지도에 표시된 마커 개수 확인 (가능하다면)
             val visibleMarkers = markers.count { it.map != null }
             Log.d("MainActivity", "지도에 실제 표시된 도로 마커 수: ${visibleMarkers}")
 
@@ -346,10 +437,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.d("MainActivity", "현재 도로 마커 수: ${markers.size}")
             Log.d("MainActivity", "받은 도로 통제 리스트: ${roadControlList?.size}개")
 
-//            if (roadControlList != null) {
-//                Log.d("MainActivity", "roadControlList.size: ${roadControlList.size}")
-//                Log.d("MainActivity", "roadControlList.isEmpty(): ${roadControlList.isEmpty()}")
-//            }
             // null 체크 추가
             if (roadControlList == null) {
                 Log.w("MainActivity", "도로 통제 리스트가 null임 - 처리중단")
@@ -534,6 +621,82 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    // 위치 검색 실행
+    private fun searchLocations(query: String): List<LocationData> {
+        val results = mutableListOf<LocationData>()
+        
+        gwangjuLocations.forEach { location ->
+            if (location.name.contains(query, ignoreCase = true)) {
+                results.add(location)
+            }
+        }
+        
+        // 구별로 그룹화하여 정렬
+        return results.sortedWith(compareBy({ it.type }, { it.parent ?: it.name }))
+    }
+    
+    // 선택된 위치로 이동
+    private fun moveToLocation(location: LocationData) {
+        // 기존 위치 마커들 제거
+        clearLocationMarkers()
+        
+        // 새로운 위치 마커 추가
+        val marker = Marker()
+        marker.position = LatLng(location.latitude, location.longitude)
+        marker.map = naverMap
+        
+        // 구와 동에 따라 다른 아이콘 사용
+        when (location.type) {
+            "구" -> {
+                marker.icon = MarkerIcons.BLUE
+                marker.iconTintColor = Color.BLUE
+                marker.width = 80
+                marker.height = 80
+            }
+            "동" -> {
+                marker.icon = MarkerIcons.GREEN
+                marker.iconTintColor = Color.GREEN
+                marker.width = 60
+                marker.height = 60
+            }
+        }
+        
+        marker.tag = "LOCATION_${location.name}"
+        
+        // 마커 클릭 이벤트
+        marker.setOnClickListener { _ ->
+            val message = when (location.type) {
+                "구" -> "🏛️ ${location.name}\n\n위치: ${location.latitude}, ${location.longitude}"
+                "동" -> "🏘️ ${location.name}\n📍 소속: ${location.parent}\n\n위치: ${location.latitude}, ${location.longitude}"
+                else -> "${location.name}\n\n위치: ${location.latitude}, ${location.longitude}"
+            }
+            
+            android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_LONG).show()
+            true
+        }
+        
+        locationMarkers.add(marker)
+        
+        // 카메라를 해당 위치로 이동
+        val cameraPosition = CameraPosition(
+            LatLng(location.latitude, location.longitude),
+            15.0,
+            0.0,
+            0.0
+        )
+        naverMap.cameraPosition = cameraPosition
+        
+        android.widget.Toast.makeText(this, "${location.name}으로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
+    }
+    
+    // 위치 마커들 제거
+    private fun clearLocationMarkers() {
+        locationMarkers.forEach { marker ->
+            marker.map = null
+        }
+        locationMarkers.clear()
     }
 
     // 주어진 리소스에서 가장자리의 흰색(근사치) 배경만 투명 처리하고 내부 글씨의 흰색은 유지

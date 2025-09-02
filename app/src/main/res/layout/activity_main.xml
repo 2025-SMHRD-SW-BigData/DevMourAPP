@@ -56,7 +56,6 @@ tools:context=".MainActivity">
                 android:textColor="#333333"
                 android:textColorHint="#999999"
                 android:textSize="16sp" />
-
             <Button
                 android:id="@+id/btnSearch"
                 android:layout_width="70dp"
