@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const markersRouter = require('./routes/markers');
 const roadControlsRouter = require('./routes/road-controls');
+const reportsRouter = require('./routes/reports');
 
 const app = express();
 const PORT = 3000; // 명시적으로 포트 3000 사용
@@ -20,6 +21,7 @@ app.use((req, res, next) => {
 // 라우터 설정
 app.use('/api/roads', markersRouter);
 app.use('/api/road-controls', roadControlsRouter);
+app.use('/api/reports', reportsRouter);
 
 // 기본 라우트
 app.get('/', (req, res) => {
@@ -28,7 +30,8 @@ app.get('/', (req, res) => {
         timestamp: new Date().toISOString(),
         endpoints: {
             roads: '/api/roads',
-            roadControls: '/api/road-controls'
+            roadControls: '/api/road-controls',
+            reports: '/api/reports'
         }
     });
 });
@@ -47,6 +50,7 @@ app.listen(PORT, '0.0.0.0',() => {
     console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
     console.log(`API 엔드포인트: http://localhost:${PORT}/api/roads`);
     console.log(`도로 통제 API 엔드포인트: http://localhost:${PORT}/api/road-controls`);
+    console.log(`민원 제출 API 엔드포인트: http://localhost:${PORT}/api/reports`);
     console.log(`헬스체크: http://localhost:${PORT}/health`);
     console.log(`=================================`);
 });

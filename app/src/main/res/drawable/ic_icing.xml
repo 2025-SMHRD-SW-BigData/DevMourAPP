@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- 배경 원 -->
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z"/>
+    
+    <!-- 도로 -->
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M4,16h16v2H4V16z"/>
+    
+    <!-- 자동차 -->
+    <path
+        android:fillColor="#F44336"
+        android:pathData="M7,13c0.55,0 1,0.45 1,1s-0.45,1 -1,1 -1,-0.45 -1,-1 0.45,-1 1,-1zM17,13c0.55,0 1,0.45 1,1s-0.45,1 -1,1 -1,-0.45 -1,-1 0.45,-1 1,-1z"/>
+    <path
+        android:fillColor="#F44336"
+        android:pathData="M18.92,6.01C18.72,5.42 18.16,5 17.5,5h-11C5.84,5 5.28,5.42 5.08,6.01L3,12v3.5c0,0.83 0.67,1.5 1.5,1.5S6,16.33 6,15.5V15h12v0.5c0,0.83 0.67,1.5 1.5,1.5s1.5,-0.67 1.5,-1.5V12L18.92,6.01zM6.5,6.5h11L19,11H5L6.5,6.5z"/>
+    
+    <!-- 얼음 조각들 -->
+    <path
+        android:fillColor="#81D4FA"
+        android:pathData="M8,14l2,-2 2,2 -2,2L8,14z"/>
+    <path
+        android:fillColor="#81D4FA"
+        android:pathData="M14,14l2,-2 2,2 -2,2L14,14z"/>
+    <path
+        android:fillColor="#81D4FA"
+        android:pathData="M11,11l2,-2 2,2 -2,2L11,11z"/>
+    
+    <!-- 눈송이 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2l1.09,3.26L16,6.26l-2.91,2.91L13.09,12L12,10.91L10.91,12L8.91,9.17L6,6.26l2.91,-1L12,2z"/>
+</vector>

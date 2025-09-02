@@ -1,8 +1,10 @@
 package com.example.devmour
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -32,6 +34,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var roadViewModel: RoadViewModel
     private lateinit var roadControlViewModel: RoadControlViewModel
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var btnReport: androidx.appcompat.widget.AppCompatButton
     private val PERMISSION = arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)
     
     // 마커 리스트를 저장할 변수
@@ -65,6 +68,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment!!.getMapAsync(this)
         Log.d("MainActivity", "지도 비동기 로드 요청")
         
+        // 민원제보 버튼 초기화 및 클릭 이벤트 설정
+        btnReport = findViewById(R.id.btn_report)
+        btnReport.setOnClickListener {
+            val intent = Intent(this, ReportActivity::class.java)
+            startActivity(intent)
+        }
 
     }
     private fun observeRoads() {
