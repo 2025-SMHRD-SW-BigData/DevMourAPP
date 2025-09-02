@@ -11,7 +11,7 @@ import android.widget.EditText
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.drawerlayout.widget.DrawerLayout
+
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -42,8 +42,7 @@ data class LocationData(
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
-    private lateinit var drawerLayout: DrawerLayout
-    private lateinit var searchEditText: EditText
+
 
     private var LOCATION_PERMISSION = 1004
     private lateinit var naverMap: NaverMap
@@ -200,7 +199,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
         Log.d("MainActivity", "onCreate 시작")
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        // 키보드 설정 - 완전한 제어
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         // ViewModel 초기화
         roadViewModel = ViewModelProvider(this)[RoadViewModel::class.java]
         roadControlViewModel = ViewModelProvider(this)[RoadControlViewModel::class.java]
@@ -259,6 +259,37 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         val searchButton = findViewById<android.widget.Button>(R.id.btnSearch)
         val searchEditText = findViewById<android.widget.EditText>(R.id.etSearch)
         
+        // EditText 클릭 시 키보드 강제 표시 및 커스텀 메뉴 차단
+        searchEditText?.setOnClickListener {
+            searchEditText.requestFocus()
+            // 즉시 키보드 표시 시도
+            val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.showSoftInput(searchEditText, android.view.inputmethod.InputMethodManager.SHOW_FORCED)
+            
+            // 추가 시도들
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                imm.showSoftInput(searchEditText, android.view.inputmethod.InputMethodManager.SHOW_FORCED)
+            }, 50)
+            
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                imm.showSoftInput(searchEditText, android.view.inputmethod.InputMethodManager.SHOW_FORCED)
+            }, 100)
+        }
+        
+        // EditText 포커스 변경 시 키보드 강제 표시
+        searchEditText?.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                // 즉시 키보드 표시
+                val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.showSoftInput(searchEditText, android.view.inputmethod.InputMethodManager.SHOW_FORCED)
+                
+                // 추가로 토글 시도
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    imm.toggleSoftInput(android.view.inputmethod.InputMethodManager.SHOW_FORCED, 0)
+                }, 200)
+            }
+        }
+        
         searchButton?.setOnClickListener {
             val searchQuery = searchEditText.text.toString().trim()
             if (searchQuery.isNotEmpty()) {
@@ -267,6 +298,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     // 첫 번째 검색 결과로 이동
                     moveToLocation(searchResults.first())
                     android.widget.Toast.makeText(this, "${searchResults.first().name}으로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
+                    
+                    // 검색 완료 후 키보드 숨기기
+                    val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                    imm.hideSoftInputFromWindow(searchEditText.windowToken, 0)
+                    searchEditText.clearFocus()
                 } else {
                     android.widget.Toast.makeText(this, "검색 결과가 없습니다", android.widget.Toast.LENGTH_SHORT).show()
                 }
