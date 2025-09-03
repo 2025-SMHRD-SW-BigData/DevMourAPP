@@ -7,7 +7,6 @@ import java.util.ArrayDeque
 import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
-import android.widget.EditText
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -26,8 +25,6 @@ import com.naver.maps.map.overlay.OverlayImage
 import com.naver.maps.map.util.FusedLocationSource
 import com.naver.maps.map.util.MarkerIcons
 import com.naver.maps.map.MapFragment
-import com.example.devmour.data.Road as RoadData
-import com.example.devmour.data.RoadControl as RoadControlData
 import com.example.devmour.viewmodel.RoadViewModel
 import com.example.devmour.viewmodel.RoadControlViewModel
 
@@ -52,6 +49,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val PERMISSION = arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)
     
+    // 실시간 위치 표시를 위한 변수들
+    private var currentLocationMarker: Marker? = null
+    private var locationUpdateHandler: android.os.Handler? = null
+    private val LOCATION_UPDATE_INTERVAL = 3000L // 3초마다 위치 업데이트
+    
+    // 위험 구역 감지를 위한 변수들
+    private var isInDangerZone = false
+    private var dangerAnimationHandler: android.os.Handler? = null
+    private val DANGER_ANIMATION_INTERVAL = 25L // 위험 시 25ms마다 애니메이션 (빠른 깜빡임)
+    private val NORMAL_ANIMATION_INTERVAL = 50L // 일반 시 50ms마다 애니메이션
+
+
     // 네비게이션 바 요소들
     private lateinit var btnNotification: android.view.View
     private lateinit var btnMain: android.view.View
@@ -385,8 +394,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     if (iconResId != null) {
                         marker.icon = getTransparentOverlay(iconResId)
-                        marker.width = 100
-                        marker.height = 100
+                        marker.width = 150
+                        marker.height = 150
                     } else {
                         // 정의되지 않은 경우 기존 회색 틴트 유지
                         marker.icon = MarkerIcons.BLACK
@@ -518,8 +527,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     marker.map = naverMap
                     // 도로 통제 마커 아이콘을 보라색 이미지로 교체 (배경 투명 처리)
                     marker.icon = getTransparentOverlay(R.drawable.marker_control)
-                    marker.width = 120
-                    marker.height = 120
+                    marker.width = 150
+                    marker.height = 150
                     
                     marker.tag = "CONTROL_${roadControlData.controlIdx}"
 
@@ -598,21 +607,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.d("MainActivity", "지도 준비 완료")
         naverMap = map
 
+
         // 잠시 기다린 후 지도 상태 확인
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             Log.d("MainActivity", "지도 준비 3초 후 상태 확인")
             checkMarkerStatus()
         }, 3000)
 
-        // 카메라 설정 (광주 지역으로 설정)
+        // 카메라 설정 (테스트 위치로 설정)
+        val testLatitude = 35.1488
+        val testLongitude = 126.9154
         val cameraPosition = CameraPosition(
-            LatLng(35.1595, 126.8526),
+            LatLng(testLatitude, testLongitude),
             16.0,
             20.0,
             0.0
         )
         naverMap.cameraPosition = cameraPosition
-        Log.d("MainActivity", "카메라 위치 설정 완료")
+        Log.d("MainActivity", "테스트 위치로 카메라 설정 완료: $testLatitude, $testLongitude")
         
         // 지도 클릭 이벤트 비활성화 (마커 추가/삭제 기능 제거)
         naverMap.setOnMapClickListener { point, coord ->
@@ -620,7 +632,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         
         naverMap.locationSource = locationSource
-        ActivityCompat.requestPermissions(this, PERMISSION, LOCATION_PERMISSION)
+        
+        // 위치 추적 설정 (테스트 모드)
+        naverMap.locationTrackingMode = LocationTrackingMode.None
+        naverMap.uiSettings.isLocationButtonEnabled = false
+        
+        // 테스트 모드에서는 위치 권한 요청하지 않음
+        // ActivityCompat.requestPermissions(this, PERMISSION, LOCATION_PERMISSION)
         
         // 지도가 준비되면 도로 데이터 로드
         Log.d("MainActivity", "도로 데이터 로드 시작")
@@ -629,6 +647,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // 도로 통제 데이터 로드
         Log.d("MainActivity", "도로 통제 데이터 로드 시작")
         roadControlViewModel.loadRoadControls()
+        
+        // 테스트 위치 마커 즉시 표시
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            startLocationUpdates()
+        }, 1000) // 1초 후 시작
 
         // 잠시 후 LiveData 값을 강제로 확인
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
@@ -651,10 +674,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                 if (!locationSource.isActivated) {
                     naverMap.locationTrackingMode = LocationTrackingMode.None
+                    stopLocationUpdates()
+                    android.widget.Toast.makeText(this, "위치 권한이 필요합니다", android.widget.Toast.LENGTH_SHORT).show()
                 } else {
                     naverMap.locationTrackingMode = LocationTrackingMode.Follow
+                    startLocationUpdates()
+                    android.widget.Toast.makeText(this, "실시간 위치 추적이 시작되었습니다", android.widget.Toast.LENGTH_SHORT).show()
                 }
-                naverMap.locationTrackingMode = LocationTrackingMode.None
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -727,7 +753,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         android.widget.Toast.makeText(this, "${location.name}으로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
     }
-    
+
     // 위치 마커들 제거
     private fun clearLocationMarkers() {
         locationMarkers.forEach { marker ->
@@ -736,6 +762,259 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         locationMarkers.clear()
     }
 
+    // 실시간 위치 업데이트 시작
+    private fun startLocationUpdates() {
+        Log.d("MainActivity", "startLocationUpdates 호출됨")
+        
+        if (locationUpdateHandler == null) {
+            locationUpdateHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        }
+        
+        // 즉시 첫 번째 위치 업데이트 실행
+        updateCurrentLocation()
+        
+        val locationRunnable = object : Runnable {
+            override fun run() {
+                updateCurrentLocation()
+                locationUpdateHandler?.postDelayed(this, LOCATION_UPDATE_INTERVAL)
+            }
+        }
+        
+        locationUpdateHandler?.postDelayed(locationRunnable, LOCATION_UPDATE_INTERVAL)
+        Log.d("MainActivity", "실시간 위치 업데이트 시작")
+    }
+    
+    // 실시간 위치 업데이트 중지
+    private fun stopLocationUpdates() {
+        locationUpdateHandler?.removeCallbacksAndMessages(null)
+        locationUpdateHandler = null
+        
+        // FusedLocationProviderClient의 위치 업데이트도 중지
+        try {
+            fusedLocationClient.removeLocationUpdates(object : com.google.android.gms.location.LocationCallback() {})
+        } catch (e: Exception) {
+            Log.e("MainActivity", "위치 업데이트 제거 실패: ${e.message}")
+        }
+        
+        Log.d("MainActivity", "실시간 위치 업데이트 중지")
+    }
+    
+    // 현재 위치 업데이트
+    private fun updateCurrentLocation() {
+        // 테스트용 하드코딩된 위치 (일시적)
+       //광주역 좌표
+//        val testLatitude = 35.165
+//        val testLongitude = 126.909
+
+        //금남로4가 좌표
+        val testLatitude = 35.1488
+        val testLongitude = 126.9154
+
+        // 하드코딩된 위치로 마커 업데이트
+        updateLocationMarker(LatLng(testLatitude, testLongitude))
+        Log.d("MainActivity", "테스트 위치로 업데이트: $testLatitude, $testLongitude")
+        
+        // 실제 GPS 위치 대신 테스트 위치 사용
+        /*
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            // 마지막 알려진 위치 가져오기
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                location?.let {
+                    updateLocationMarker(LatLng(it.latitude, it.longitude))
+                    Log.d("MainActivity", "위치 업데이트: ${it.latitude}, ${it.longitude}")
+                }
+            }
+            
+            // 실시간 위치 업데이트 요청 (더 정확한 위치)
+            try {
+                val locationRequest = com.google.android.gms.location.LocationRequest.Builder(10000) // 10초마다
+                    .setPriority(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY)
+                    .build()
+                
+                fusedLocationClient.requestLocationUpdates(locationRequest, 
+                    object : com.google.android.gms.location.LocationCallback() {
+                        override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+                            locationResult.lastLocation?.let { location ->
+                                updateLocationMarker(LatLng(location.latitude, location.longitude))
+                                Log.d("MainActivity", "실시간 위치 업데이트: ${location.latitude}, ${location.longitude}")
+                            }
+                        }
+                    }, android.os.Looper.getMainLooper())
+            } catch (e: Exception) {
+                Log.e("MainActivity", "실시간 위치 업데이트 요청 실패: ${e.message}")
+            }
+        }
+        */
+    }
+    
+    // 위치 마커 업데이트
+    private fun updateLocationMarker(position: LatLng) {
+        Log.d("MainActivity", "updateLocationMarker 호출됨: $position")
+        
+        // 위험 구역 확인
+        val wasInDangerZone = isInDangerZone
+        isInDangerZone = checkDangerZone(position)
+        
+        if (isInDangerZone != wasInDangerZone) {
+            Log.d("MainActivity", "위험 구역 상태 변경: $isInDangerZone")
+        }
+        
+        if (currentLocationMarker == null) {
+            // 새로운 위치 마커 생성
+            currentLocationMarker = Marker().apply {
+                this.position = position
+                this.map = naverMap
+                
+                // 위험 구역 여부에 따라 색상 설정
+                updateMarkerColor(this, isInDangerZone)
+                
+                this.width = 130  // 더 크게 설정
+                this.height = 130  // 더 크게 설정
+                this.tag = "CURRENT_LOCATION"
+            }
+            
+            Log.d("MainActivity", "새로운 위치 마커 생성됨: ${currentLocationMarker?.position}")
+            
+            // pulsing 애니메이션 적용
+            startPulsingAnimation()
+        } else {
+            // 기존 마커 위치 업데이트
+            currentLocationMarker?.position = position
+            
+            // 위험 구역 상태가 변경되었으면 색상 업데이트
+            if (isInDangerZone != wasInDangerZone) {
+                updateMarkerColor(currentLocationMarker!!, isInDangerZone)
+                // 애니메이션 재시작 (속도 변경을 위해)
+                startPulsingAnimation()
+            }
+            
+            Log.d("MainActivity", "기존 위치 마커 업데이트됨: $position")
+        }
+    }
+    
+    // 위험 구역 감지 함수 (t_road 테이블의 severity_level이 "위험"인 행들과의 거리 계산)
+    private fun checkDangerZone(currentPosition: LatLng): Boolean {
+        val dangerRadius = 300.0 // 300미터 반경
+        
+        // 도로 마커들 중 위험한 마커 확인
+        markers.forEach { marker ->
+            if (marker.tag?.toString()?.startsWith("ROAD_") == true) {
+                val distance = calculateDistance(currentPosition, marker.position)
+                if (distance <= dangerRadius) {
+                    // 위험 마커인지 확인 (빨간색 마커 또는 severity_level이 "위험"인 경우)
+                    try {
+                        // 마커 태그에서 위험 정보 확인
+                        val markerTag = marker.tag.toString()
+                        if (markerTag.contains("위험") || markerTag.contains("DANGER")) {
+                            Log.d("MainActivity", "위험 마커 감지됨: 거리 ${distance}m, 태그: $markerTag")
+                            return true
+                        }
+                        
+                        // 아이콘 색상으로도 확인 (빨간색 마커)
+                        if (marker.iconTintColor == Color.RED) {
+                            Log.d("MainActivity", "빨간색 위험 마커 감지됨: 거리 ${distance}m")
+                            return true
+                        }
+                        
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "마커 위험도 확인 실패: ${e.message}")
+                    }
+                }
+            }
+        }
+        
+        // 데이터베이스에서 직접 위험 도로 확인
+        roadViewModel.roads.value?.forEach { roadData ->
+            if (roadData.severityLevel == "위험") {
+                val distance = calculateDistance(currentPosition, LatLng(roadData.latitude, roadData.longitude))
+                if (distance <= dangerRadius) {
+                    Log.d("MainActivity", "데이터베이스 위험 도로 감지됨: 거리 ${distance}m, 심각도: ${roadData.severityLevel}")
+                    return true
+                }
+            }
+        }
+        
+        return false
+    }
+    
+    // 두 지점 간의 거리 계산 (미터 단위)
+    private fun calculateDistance(pos1: LatLng, pos2: LatLng): Double {
+        val lat1 = Math.toRadians(pos1.latitude)
+        val lat2 = Math.toRadians(pos2.latitude)
+        val deltaLat = Math.toRadians(pos2.latitude - pos1.latitude)
+        val deltaLng = Math.toRadians(pos2.longitude - pos1.longitude)
+        
+        val a = kotlin.math.sin(deltaLat / 2) * kotlin.math.sin(deltaLat / 2) +
+                kotlin.math.cos(lat1) * kotlin.math.cos(lat2) *
+                kotlin.math.sin(deltaLng / 2) * kotlin.math.sin(deltaLng / 2)
+        val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
+        
+        return 6371000 * c // 지구 반지름 * c (미터 단위)
+    }
+    
+    // 마커 색상 업데이트 함수
+    private fun updateMarkerColor(marker: Marker, isDanger: Boolean) {
+        if (isDanger) {
+            // 위험 구역일 때 빨간색
+            try {
+                marker.icon = OverlayImage.fromResource(R.drawable.location_dot_red)
+                Log.d("MainActivity", "위험 구역: 빨간색 마커로 변경")
+            } catch (e: Exception) {
+                Log.e("MainActivity", "빨간색 위치 점 아이콘 로드 실패: ${e.message}")
+                // 실패 시 기본 마커를 빨간색으로 변경
+                marker.icon = MarkerIcons.BLUE
+                marker.iconTintColor = Color.RED
+            }
+        } else {
+            // 안전 구역일 때 보라색
+            try {
+                marker.icon = OverlayImage.fromResource(R.drawable.location_dot_purple)
+                Log.d("MainActivity", "안전 구역: 보라색 마커로 변경")
+            } catch (e: Exception) {
+                Log.e("MainActivity", "보라색 위치 점 아이콘 로드 실패: ${e.message}")
+                // 실패 시 기본 마커를 보라색으로 변경
+                marker.icon = MarkerIcons.BLUE
+                marker.iconTintColor = Color.rgb(138, 43, 226) // 보라색
+            }
+        }
+    }
+    
+    // pulsing 애니메이션 시작
+    private fun startPulsingAnimation() {
+        currentLocationMarker?.let { marker ->
+            // 기존 애니메이션 정리
+            dangerAnimationHandler?.removeCallbacksAndMessages(null)
+            
+            // 부드러운 pulsing 효과를 위한 변수들
+            var scale: Double = 1.0
+            var animationStep = 0
+            
+            val pulseRunnable = object : Runnable {
+                override fun run() {
+                    // 사인 함수를 사용하여 부드러운 pulsing 효과 생성
+                    val progress = animationStep % 60 / 60.0f
+                    scale = 1.0f + 0.3f * kotlin.math.sin(progress * 2 * kotlin.math.PI)
+                    
+                    // 마커 크기 업데이트 (기본 크기 130에서 시작)
+                    marker.width = (130 * scale).toInt()
+                    marker.height = (130 * scale).toInt()
+                    
+                    animationStep++
+                    
+                    // 위험 구역 여부에 따라 애니메이션 속도 조절
+                    val interval = if (isInDangerZone) DANGER_ANIMATION_INTERVAL else NORMAL_ANIMATION_INTERVAL
+                    dangerAnimationHandler?.postDelayed(this, interval)
+                }
+            }
+            
+            // 별도의 애니메이션 핸들러 사용
+            if (dangerAnimationHandler == null) {
+                dangerAnimationHandler = android.os.Handler(android.os.Looper.getMainLooper())
+            }
+            dangerAnimationHandler?.post(pulseRunnable)
+        }
+    }
+    
     // 주어진 리소스에서 가장자리의 흰색(근사치) 배경만 투명 처리하고 내부 글씨의 흰색은 유지
     private fun getTransparentOverlay(resId: Int): OverlayImage {
         overlayImageCache[resId]?.let { return it }
@@ -822,4 +1101,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         overlayImageCache[resId] = overlay
         return overlay
     }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        stopLocationUpdates()
+        
+        // 위험 애니메이션 핸들러 정리
+        dangerAnimationHandler?.removeCallbacksAndMessages(null)
+        dangerAnimationHandler = null
+        
+        currentLocationMarker?.map = null
+        currentLocationMarker = null
+    }
 }
+
