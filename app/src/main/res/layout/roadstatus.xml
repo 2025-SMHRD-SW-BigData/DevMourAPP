@@ -180,7 +180,7 @@
                         <ImageView
                             android:layout_width="40dp"
                             android:layout_height="40dp"
-                            android:src="@drawable/flood" />
+                            android:src="@drawable/flood_mark" />
 
                     </LinearLayout>
 
@@ -242,7 +242,7 @@
                         <ImageView
                             android:layout_width="40dp"
                             android:layout_height="40dp"
-                            android:src="@drawable/flood" />
+                            android:src="@drawable/flood_mark" />
 
                     </LinearLayout>
 
