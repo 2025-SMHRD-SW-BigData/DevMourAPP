@@ -22,6 +22,7 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
+import com.naver.maps.map.overlay.CircleOverlay
 import com.naver.maps.map.util.FusedLocationSource
 import com.naver.maps.map.util.MarkerIcons
 import com.naver.maps.map.MapFragment
@@ -57,8 +58,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     // 위험 구역 감지를 위한 변수들
     private var isInDangerZone = false
     private var dangerAnimationHandler: android.os.Handler? = null
-    private val DANGER_ANIMATION_INTERVAL = 25L // 위험 시 25ms마다 애니메이션 (빠른 깜빡임)
+    private val DANGER_ANIMATION_INTERVAL = 15L // 위험 시 15ms마다 애니메이션 (숫자낮을수록빠름)
     private val NORMAL_ANIMATION_INTERVAL = 50L // 일반 시 50ms마다 애니메이션
+    
+    // 파동 애니메이션을 위한 변수들
+    private val rippleOverlays = mutableListOf<CircleOverlay>()
+    private var rippleAnimationHandler: android.os.Handler? = null
+    private val RIPPLE_ANIMATION_INTERVAL = 30L // 60fps 애니메이션
+    private val MAX_RIPPLE_COUNT = 3 // 동시에 표시될 파동 개수
 
 
     // 네비게이션 바 요소들
@@ -803,7 +810,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // 테스트용 하드코딩된 위치 (일시적)
        //광주역 좌표
 //        val testLatitude = 35.165
-//        val testLongitude = 126.909
+//      val testLongitude = 126.909
 
         //금남로4가 좌표
         val testLatitude = 35.1488
@@ -859,35 +866,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         
         if (currentLocationMarker == null) {
-            // 새로운 위치 마커 생성
+            // 마커는 생성하지 않고 파동 애니메이션만 시작
             currentLocationMarker = Marker().apply {
                 this.position = position
-                this.map = naverMap
-                
-                // 위험 구역 여부에 따라 색상 설정
-                updateMarkerColor(this, isInDangerZone)
-                
-                this.width = 130  // 더 크게 설정
-                this.height = 130  // 더 크게 설정
+                this.map = null  // 지도에 표시하지 않음
                 this.tag = "CURRENT_LOCATION"
             }
             
-            Log.d("MainActivity", "새로운 위치 마커 생성됨: ${currentLocationMarker?.position}")
+            Log.d("MainActivity", "위치 추적 시작: ${position}")
             
-            // pulsing 애니메이션 적용
+            // 파동 애니메이션 시작
             startPulsingAnimation()
         } else {
-            // 기존 마커 위치 업데이트
+            // 기존 마커 위치만 업데이트 (화면에는 표시되지 않음)
             currentLocationMarker?.position = position
             
-            // 위험 구역 상태가 변경되었으면 색상 업데이트
+            // 위험 구역 상태가 변경되었으면 애니메이션 재시작
             if (isInDangerZone != wasInDangerZone) {
-                updateMarkerColor(currentLocationMarker!!, isInDangerZone)
-                // 애니메이션 재시작 (속도 변경을 위해)
                 startPulsingAnimation()
             }
             
-            Log.d("MainActivity", "기존 위치 마커 업데이트됨: $position")
+            Log.d("MainActivity", "위치 업데이트됨: $position")
         }
     }
     
@@ -951,66 +950,114 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         return 6371000 * c // 지구 반지름 * c (미터 단위)
     }
     
-    // 마커 색상 업데이트 함수
-    private fun updateMarkerColor(marker: Marker, isDanger: Boolean) {
-        if (isDanger) {
-            // 위험 구역일 때 빨간색
-            try {
-                marker.icon = OverlayImage.fromResource(R.drawable.location_dot_red)
-                Log.d("MainActivity", "위험 구역: 빨간색 마커로 변경")
-            } catch (e: Exception) {
-                Log.e("MainActivity", "빨간색 위치 점 아이콘 로드 실패: ${e.message}")
-                // 실패 시 기본 마커를 빨간색으로 변경
-                marker.icon = MarkerIcons.BLUE
-                marker.iconTintColor = Color.RED
-            }
-        } else {
-            // 안전 구역일 때 보라색
-            try {
-                marker.icon = OverlayImage.fromResource(R.drawable.location_dot_purple)
-                Log.d("MainActivity", "안전 구역: 보라색 마커로 변경")
-            } catch (e: Exception) {
-                Log.e("MainActivity", "보라색 위치 점 아이콘 로드 실패: ${e.message}")
-                // 실패 시 기본 마커를 보라색으로 변경
-                marker.icon = MarkerIcons.BLUE
-                marker.iconTintColor = Color.rgb(138, 43, 226) // 보라색
-            }
-        }
-    }
+
     
-    // pulsing 애니메이션 시작
+    // 파동 애니메이션 시작
     private fun startPulsingAnimation() {
         currentLocationMarker?.let { marker ->
             // 기존 애니메이션 정리
             dangerAnimationHandler?.removeCallbacksAndMessages(null)
+            rippleAnimationHandler?.removeCallbacksAndMessages(null)
             
-            // 부드러운 pulsing 효과를 위한 변수들
-            var scale: Double = 1.0
+            // 기존 파동 오버레이들 제거
+            clearRippleOverlays()
+            
+            // 파동 애니메이션 시작
+            startRippleAnimation()
+        }
+    }
+    
+    // 파동 오버레이들 제거
+    private fun clearRippleOverlays() {
+        rippleOverlays.forEach { overlay ->
+            overlay.map = null
+        }
+        rippleOverlays.clear()
+    }
+    
+    // 파동 애니메이션 시작
+    private fun startRippleAnimation() {
+        currentLocationMarker?.let { marker ->
+            if (rippleAnimationHandler == null) {
+                rippleAnimationHandler = android.os.Handler(android.os.Looper.getMainLooper())
+            }
+            
             var animationStep = 0
-            
-            val pulseRunnable = object : Runnable {
+            val rippleRunnable = object : Runnable {
                 override fun run() {
-                    // 사인 함수를 사용하여 부드러운 pulsing 효과 생성
-                    val progress = animationStep % 60 / 60.0f
-                    scale = 1.0f + 0.3f * kotlin.math.sin(progress * 2 * kotlin.math.PI)
+                    // 새로운 파동 생성 (최대 개수 제한)
+                    if (rippleOverlays.size < MAX_RIPPLE_COUNT) {
+                        createRippleOverlay(marker.position)
+                    }
                     
-                    // 마커 크기 업데이트 (기본 크기 130에서 시작)
-                    marker.width = (130 * scale).toInt()
-                    marker.height = (130 * scale).toInt()
+                    // 기존 파동들 애니메이션 업데이트
+                    updateRippleAnimation()
+                    
+                    // 완성된 파동들 제거
+                    removeCompletedRipples()
                     
                     animationStep++
                     
                     // 위험 구역 여부에 따라 애니메이션 속도 조절
-                    val interval = if (isInDangerZone) DANGER_ANIMATION_INTERVAL else NORMAL_ANIMATION_INTERVAL
-                    dangerAnimationHandler?.postDelayed(this, interval)
+                    val interval = if (isInDangerZone) RIPPLE_ANIMATION_INTERVAL else RIPPLE_ANIMATION_INTERVAL * 2
+                    rippleAnimationHandler?.postDelayed(this, interval)
                 }
             }
             
-            // 별도의 애니메이션 핸들러 사용
-            if (dangerAnimationHandler == null) {
-                dangerAnimationHandler = android.os.Handler(android.os.Looper.getMainLooper())
-            }
-            dangerAnimationHandler?.post(pulseRunnable)
+            rippleAnimationHandler?.post(rippleRunnable)
+        }
+    }
+    
+    // 새로운 파동 오버레이 생성
+    private fun createRippleOverlay(position: LatLng) {
+        val ripple = CircleOverlay().apply {
+            this.center = position
+            this.radius = 5.0 // 시작 반지름 (미터)
+            this.color = if (isInDangerZone) android.graphics.Color.argb(100, 255, 0, 0) else android.graphics.Color.argb(100, 0, 123, 255)
+            this.outlineColor = if (isInDangerZone) android.graphics.Color.argb(150, 255, 0, 0) else android.graphics.Color.argb(150, 0, 123, 255)
+            this.outlineWidth = 2
+            this.map = naverMap
+            this.tag = "RIPPLE_${System.currentTimeMillis()}"
+        }
+        
+        rippleOverlays.add(ripple)
+    }
+    
+    // 파동 애니메이션 업데이트
+    private fun updateRippleAnimation() {
+        rippleOverlays.forEach { ripple ->
+            // 반지름 증가 (파동이 퍼져나가는 효과)
+            val currentRadius = ripple.radius
+            val newRadius = currentRadius + (if (isInDangerZone) 2.0 else 1.5) // 위험 시 더 빠르게
+            
+            // 투명도 감소 (멀어질수록 흐려지는 효과)
+            val currentAlpha = (ripple.color shr 24) and 0xFF
+            val newAlpha = (currentAlpha - 3).coerceAtLeast(0)
+            
+            ripple.radius = newRadius
+            ripple.color = android.graphics.Color.argb(newAlpha, 
+                (ripple.color shr 16) and 0xFF,
+                (ripple.color shr 8) and 0xFF,
+                ripple.color and 0xFF
+            )
+            ripple.outlineColor = android.graphics.Color.argb((newAlpha * 1.5).toInt().coerceAtMost(255), 
+                (ripple.outlineColor shr 16) and 0xFF,
+                (ripple.outlineColor shr 8) and 0xFF,
+                ripple.outlineColor and 0xFF
+            )
+        }
+    }
+    
+    // 완성된 파동들 제거
+    private fun removeCompletedRipples() {
+        val completedRipples = rippleOverlays.filter { ripple ->
+            val alpha = (ripple.color shr 24) and 0xFF
+            alpha <= 0 || ripple.radius > 100.0 // 투명해지거나 너무 커진 파동 제거
+        }
+        
+        completedRipples.forEach { ripple ->
+            ripple.map = null
+            rippleOverlays.remove(ripple)
         }
     }
     
@@ -1108,6 +1155,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // 위험 애니메이션 핸들러 정리
         dangerAnimationHandler?.removeCallbacksAndMessages(null)
         dangerAnimationHandler = null
+        
+        // 파동 애니메이션 핸들러 정리
+        rippleAnimationHandler?.removeCallbacksAndMessages(null)
+        rippleAnimationHandler = null
+        
+        // 파동 오버레이들 정리
+        clearRippleOverlays()
         
         currentLocationMarker?.map = null
         currentLocationMarker = null
