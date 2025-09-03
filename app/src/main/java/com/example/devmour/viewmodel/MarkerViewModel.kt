@@ -18,8 +18,8 @@ class RoadViewModel : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
     
-    private val _error = MutableLiveData<String>()
-    val error: LiveData<String> = _error
+    private val _error = MutableLiveData<String?>()
+    val error: LiveData<String?> = _error
 
     fun loadRoads() {
         Log.d("RoadViewModel", "도로 데이터 로드 시작")
