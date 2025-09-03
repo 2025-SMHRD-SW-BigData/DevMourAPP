@@ -188,4 +188,21 @@ tools:context=".MainActivity">
 
     </androidx.cardview.widget.CardView>
 
+<!-- 민원제보 버튼 -->
+<androidx.appcompat.widget.AppCompatButton
+    android:id="@+id/btn_report"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    android:background="@drawable/white_button_selector"
+    android:backgroundTint="@null"
+    android:elevation="8dp"
+    android:text="민원제보"
+    android:textColor="#1E2A44"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:translationZ="8dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

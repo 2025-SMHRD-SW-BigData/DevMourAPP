@@ -29,14 +29,7 @@ import com.naver.maps.map.MapFragment
 import com.example.devmour.viewmodel.RoadViewModel
 import com.example.devmour.viewmodel.RoadControlViewModel
 
-// 광주시 위치 데이터 클래스
-data class LocationData(
-    val name: String,
-    val latitude: Double,
-    val longitude: Double,
-    val type: String, // "구" 또는 "동"
-    val parent: String? = null // 동의 경우 상위 구 이름
-)
+import com.example.devmour.data.LocationData
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -260,8 +253,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 민원접수 버튼 클릭
         btnReport.setOnClickListener {
-            // TODO: 민원접수 화면으로 이동
-            android.widget.Toast.makeText(this, "민원접수 화면", android.widget.Toast.LENGTH_SHORT).show()
+            // ReportActivity로 이동
+            val intent = android.content.Intent(this, ReportActivity::class.java)
+            startActivity(intent)
         }
         
         // 현재 메인화면이므로 메인화면 아이콘 텍스트 색상을 강조
