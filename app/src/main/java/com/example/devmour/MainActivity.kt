@@ -244,8 +244,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 민원접수 버튼 클릭
         btnReport.setOnClickListener {
-            // TODO: 민원접수 화면으로 이동
-            android.widget.Toast.makeText(this, "민원접수 화면", android.widget.Toast.LENGTH_SHORT).show()
+            // ReportActivity로 이동
+            val intent = android.content.Intent(this, ReportActivity::class.java)
+            startActivity(intent)
         }
         
         // 현재 메인화면이므로 메인화면 아이콘 텍스트 색상을 강조

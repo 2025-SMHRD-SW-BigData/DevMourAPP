@@ -347,20 +347,20 @@ class ReportActivity : AppCompatActivity() {
                 // 텍스트 데이터 추가
                 writer.append("--$boundary\r\n")
                 writer.append("Content-Disposition: form-data; name=\"addr\"\r\n\r\n")
-                writer.append(address).append("\r\n")
+                writer.append("").append("\r\n") // 주소는 null로 설정
                 
                 writer.append("--$boundary\r\n")
                 writer.append("Content-Disposition: form-data; name=\"c_report_detail\"\r\n\r\n")
-                writer.append(category).append("\r\n")
+                writer.append(category).append("\r\n") // 카테고리 정보
                 
-                // 제보자 정보 (기본값)
+                // 제보자 정보 (null로 설정)
                 writer.append("--$boundary\r\n")
                 writer.append("Content-Disposition: form-data; name=\"c_reporter_name\"\r\n\r\n")
-                writer.append("익명").append("\r\n")
+                writer.append("").append("\r\n") // null
                 
                 writer.append("--$boundary\r\n")
                 writer.append("Content-Disposition: form-data; name=\"c_reporter_phone\"\r\n\r\n")
-                writer.append("").append("\r\n")
+                writer.append("").append("\r\n") // null
                 
                 // 이미지 데이터 추가
                 selectedImages.forEachIndexed { index, bitmap ->

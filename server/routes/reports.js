@@ -62,19 +62,19 @@ router.post('/submit', upload.fields([
         
         // 요청 데이터 파싱
         const {
-            addr,
+            addr = null, // 주소는 null로 설정
             c_report_detail = '',
             lat = null,
             lon = null,
-            c_reporter_name = '',
-            c_reporter_phone = ''
+            c_reporter_name = null,
+            c_reporter_phone = null
         } = req.body;
         
-        // 필수 필드 검증
-        if (!addr) {
+        // 필수 필드 검증 (주소는 null 허용)
+        if (!c_report_detail) {
             return res.status(400).json({
                 success: false,
-                message: '주소는 필수 입력 항목입니다.'
+                message: '제보 내용은 필수 입력 항목입니다.'
             });
         }
         
@@ -112,19 +112,21 @@ router.post('/submit', upload.fields([
                 c_report_status,
                 admin_id,
                 c_reported_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'system', NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         `;
         
         const [result] = await connection.execute(insertQuery, [
-            addr,
-            c_report_detail,
-            lat,
-            lon,
-            filePaths.c_report_file1,
-            filePaths.c_report_file2,
-            filePaths.c_report_file3,
-            c_reporter_name,
-            c_reporter_phone
+            addr, // null
+            c_report_detail, // 카테고리 정보
+            lat, // null
+            lon, // null
+            filePaths.c_report_file1, // 첫 번째 사진
+            filePaths.c_report_file2, // 두 번째 사진
+            filePaths.c_report_file3, // 세 번째 사진
+            c_reporter_name, // null
+            c_reporter_phone, // null
+            'pending', // 처리 상태
+            null // admin_id는 null
         ]);
         
         console.log('민원 제출 성공:', {
