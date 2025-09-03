@@ -775,12 +775,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun updateCurrentLocation() {
         // 테스트용 하드코딩된 위치 (일시적)
        //광주역 좌표
-        val testLatitude = 35.165
-      val testLongitude = 126.909
+//        val testLatitude = 35.165
+//      val testLongitude = 126.909
 
         //금남로4가 좌표
 //        val testLatitude = 35.1488
 //        val testLongitude = 126.9154
+      //임동오거리
+        val testLatitude =  35.1750
+        val testLongitude = 126.9370
 
         // 하드코딩된 위치로 마커 업데이트
         updateLocationMarker(LatLng(testLatitude, testLongitude))
