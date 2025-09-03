@@ -11,53 +11,33 @@ const dbConfig = {
     database: 'campus_25SW_BD_p3_2'
 };
 
-// 도로 목록 조회 - t_road 테이블에서 데이터 조회
+// 도로 목록 조회 - t_total 테이블에서 데이터 조회
 router.get('/', async (req, res) => {
     try {
         // 데이터베이스 연결
         const connection = await mysql.createConnection(dbConfig);
         
-        // t_road 테이블에서 모든 도로 데이터 조회
+        // t_total 테이블에서 각 CCTV별 최신 데이터 조회
         const [rows] = await connection.execute(`
-            SELECT 
-                road_idx,
-                anomaly_type,
-                severity_level,
-                detected_at,
-                lat,
-                lon,
-                cctv_idx,
-                img_file,
-                v_idx,
-                is_check,
-                admin_id,
-                check_date,
-                is_resolved,
-                resolved_at,
-                by_citizen
-            FROM t_road
-            ORDER BY road_idx
+            SELECT total_idx, cctv_idx, lat, lon, total_score, detected_at
+            FROM
+                ( SELECT *,
+                    ROW_NUMBER() OVER(PARTITION BY cctv_idx ORDER BY detected_at DESC) AS rn 
+                  FROM t_total
+                ) AS T
+            WHERE T.rn = 1
         `);
         
         await connection.end();
         
         // 응답 데이터 형식에 맞게 변환
         const roads = rows.map(row => ({
-            road_idx: row.road_idx,
-            anomaly_type: row.anomaly_type,
-            severity_level: row.severity_level,
-            detected_at: row.detected_at,
+            total_idx: row.total_idx,
+            cctv_idx: row.cctv_idx,
             lat: parseFloat(row.lat),
             lon: parseFloat(row.lon),
-            cctv_idx: row.cctv_idx,
-            img_file: row.img_file,
-            v_idx: row.v_idx,
-            is_check: row.is_check,
-            admin_id: row.admin_id,
-            check_date: row.check_date,
-            is_resolved: row.is_resolved,
-            resolved_at: row.resolved_at,
-            by_citizen: row.by_citizen
+            total_score: parseFloat(row.total_score),
+            detected_at: row.detected_at
         }));
         
         res.json({
@@ -76,61 +56,56 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 심각도별 도로 조회
-router.get('/severity/:severity', async (req, res) => {
+// 등급별 도로 조회
+router.get('/grade/:grade', async (req, res) => {
     try {
-        const severityLevel = req.params.severity;
+        const grade = req.params.grade;
         
         // 데이터베이스 연결
         const connection = await mysql.createConnection(dbConfig);
         
-        // 특정 심각도의 도로만 조회
+        // 특정 등급의 도로만 조회
+        let scoreCondition;
+        switch(grade) {
+            case '안전':
+                scoreCondition = 'total_score >= 0.0 AND total_score <= 4.0';
+                break;
+            case '경고':
+                scoreCondition = 'total_score >= 4.1 AND total_score <= 7.0';
+                break;
+            case '위험':
+                scoreCondition = 'total_score >= 7.1 AND total_score <= 10.0';
+                break;
+            default:
+                scoreCondition = 'total_score >= 0.0 AND total_score <= 4.0';
+        }
+        
         const [rows] = await connection.execute(`
-            SELECT 
-                road_idx,
-                anomaly_type,
-                severity_level,
-                detected_at,
-                lat,
-                lon,
-                cctv_idx,
-                img_file,
-                v_idx,
-                is_check,
-                admin_id,
-                check_date,
-                is_resolved,
-                resolved_at,
-                by_citizen
-            FROM t_road
-            WHERE severity_level = ?
-            ORDER BY road_idx
-        `, [severityLevel]);
+            SELECT total_idx, cctv_idx, lat, lon, total_score, detected_at
+            FROM
+                ( SELECT *,
+                    ROW_NUMBER() OVER(PARTITION BY cctv_idx ORDER BY detected_at DESC) AS rn 
+                  FROM t_total
+                  WHERE ${scoreCondition}
+                ) AS T
+            WHERE T.rn = 1
+        `);
         
         await connection.end();
         
         // 응답 데이터 형식에 맞게 변환
         const roads = rows.map(row => ({
-            road_idx: row.road_idx,
-            anomaly_type: row.anomaly_type,
-            severity_level: row.severity_level,
-            detected_at: row.detected_at,
+            total_idx: row.total_idx,
+            cctv_idx: row.cctv_idx,
             lat: parseFloat(row.lat),
             lon: parseFloat(row.lon),
-            cctv_idx: row.cctv_idx,
-            img_file: row.img_file,
-            v_idx: row.v_idx,
-            is_check: row.is_check,
-            admin_id: row.admin_id,
-            check_date: row.check_date,
-            is_resolved: row.is_resolved,
-            resolved_at: row.resolved_at,
-            by_citizen: row.by_citizen
+            total_score: parseFloat(row.total_score),
+            detected_at: row.detected_at
         }));
         
         res.json({
             success: true,
-            message: `${severityLevel} 심각도 도로 데이터 조회 성공`,
+            message: `${grade} 등급 도로 데이터 조회 성공`,
             data: roads
         });
         

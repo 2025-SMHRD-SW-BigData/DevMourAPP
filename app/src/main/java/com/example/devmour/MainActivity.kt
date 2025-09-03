@@ -338,6 +338,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
     
+    // total_score를 기준으로 마커 아이콘을 결정하는 함수
+    private fun getMarkerIconByScore(totalScore: Double): Int {
+        return when {
+            totalScore >= 0.0 && totalScore <= 4.0 -> R.drawable.marker_green    // 안전 등급
+            totalScore >= 4.1 && totalScore <= 7.0 -> R.drawable.marker_orange   // 경고 등급
+            totalScore >= 7.1 && totalScore <= 10.0 -> R.drawable.marker_red     // 위험 등급
+            else -> R.drawable.marker_green  // 기본값
+        }
+    }
+
+    // total_score를 기준으로 등급을 결정하는 함수
+    private fun getGradeByScore(totalScore: Double): String {
+        return when {
+            totalScore >= 0.0 && totalScore <= 4.0 -> "안전"
+            totalScore >= 4.1 && totalScore <= 7.0 -> "경고"
+            totalScore >= 7.1 && totalScore <= 10.0 -> "위험"
+            else -> "안전"
+        }
+    }
+
     private fun observeRoads() {
         Log.d("MainActivity", "=== Observer 설정 시작 ===")
 
@@ -387,87 +407,37 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     )
                     marker.map = naverMap
 
-                    // 아이콘 이미지를 drawable 리소스로 교체
-                    val iconResId = when (roadData.anomalyType) {
-                        "침수" -> R.drawable.marker_blue
-                        else -> when (roadData.severityLevel) {
-                            "위험" -> R.drawable.marker_red
-                            "경고" -> R.drawable.marker_orange
-                            "안전" -> R.drawable.marker_green
-                            else -> null
-                        }
-                    }
-
-                    if (iconResId != null) {
+                    // total_score를 기준으로 마커 아이콘 결정
+                    val iconResId = getMarkerIconByScore(roadData.totalScore)
+                    
+                    try {
                         marker.icon = getTransparentOverlay(iconResId)
                         marker.width = 150
                         marker.height = 150
-                    } else {
-                        // 정의되지 않은 경우 기존 회색 틴트 유지
+                        
+                        // 마커 툴팁에 등급과 점수 정보 표시
+                        val grade = getGradeByScore(roadData.totalScore)
+                        marker.captionText = "${grade} 등급 (점수: ${roadData.totalScore})"
+                        
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "마커 아이콘 설정 실패: ${e.message}")
+                        // 실패 시 기본 아이콘 사용
                         marker.icon = MarkerIcons.BLACK
                         marker.iconTintColor = Color.GRAY
                     }
-                    
-                    marker.tag = "ROAD_${roadData.roadIdx}"
 
-                    // 마커 클릭 이벤트 설정 - 침수인 경우에만 다이얼로그 표시
-                    marker.setOnClickListener { overlay ->
-                        // anomaly_type이 '침수'인 경우에만 다이얼로그 표시
-                        if (roadData.anomalyType == "침수") {
-                            val severityText = when (roadData.severityLevel) {
-                                "위험" -> "위험"
-                                "경고" -> "경고"
-                                "안전" -> "안전"
-                                else -> "알 수 없음"
-                            }
-                            
-                            val severityColor = when (roadData.severityLevel) {
-                                "위험" -> Color.RED
-                                "경고" -> Color.rgb(255, 165, 0)
-                                "안전" -> Color.GREEN
-                                else -> Color.GRAY
-                            }
-                            
-                            val message = "도로 이상 현상 정보\n\n" +
-                                    "• 이상 유형: ${roadData.anomalyType}\n" +
-                                    "• 발견일시: ${roadData.detectedAt}\n" +
-                                    "• 심각도: $severityText"
-                            
-                            val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
-                                .setTitle("도로 이상 현상 정보")
-                                .setMessage(message)
-                                .setPositiveButton("확인") { dialog, _ ->
-                                    dialog.dismiss()
-                                }
-                                .create()
-                            
-                            alertDialog.show()
-                            
-                            // 제목 텍스트 색상 설정
-                            val titleTextView = alertDialog.findViewById<android.widget.TextView>(android.R.id.title)
-                            titleTextView?.setTextColor(severityColor)
-                        }
-                        
-                        true // 이벤트 처리 완료
-                    }
-
+                    // 마커를 리스트에 추가
                     markers.add(marker)
-
-                    Log.d("MainActivity", "[$index] 도로 마커 위치: 원본=(${roadData.latitude}, ${roadData.longitude}), 조정=(${marker.position.latitude}, ${marker.position.longitude}), 심각도: ${roadData.severityLevel}")
+                    
+                    Log.d("MainActivity", "마커 추가 완료: ${index + 1}/${roadList.size} - 위치: ${roadData.latitude}, ${roadData.longitude}, 점수: ${roadData.totalScore}, 등급: ${getGradeByScore(roadData.totalScore)}")
 
                 } catch (e: Exception) {
-                    Log.e("MainActivity", "[$index] 도로 마커 생성 실패: ${e.message}")
+                    Log.e("MainActivity", "마커 생성 실패 (인덱스: $index): ${e.message}")
                 }
             }
 
-            Log.d("MainActivity", "도로 마커 생성 완료: ${markers.size}개")
-            Log.d("MainActivity", "현재 통제 마커 수: ${controlMarkers.size}개 (변경되지 않아야 함)")
-
-            // 실제로 지도에 표시된 마커 개수 확인 (가능하다면)
-            val visibleMarkers = markers.count { it.map != null }
-            Log.d("MainActivity", "지도에 실제 표시된 도로 마커 수: ${visibleMarkers}")
-
-            Log.d("MainActivity", "최종: ${markers.size}개 도로 마커 추가 완료")
+            Log.d("MainActivity", "=== 도로 마커 생성 완료 ===")
+            Log.d("MainActivity", "생성된 마커 수: ${markers.size}")
         }
 
         roadViewModel.error.observe(this) { errorMessage ->
@@ -531,6 +501,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         roadControlData.longitude + offsetLng
                     )
                     marker.map = naverMap
+
+
                     // 도로 통제 마커 아이콘을 보라색 이미지로 교체 (배경 투명 처리)
                     marker.icon = getTransparentOverlay(R.drawable.marker_control)
                     marker.width = 150
@@ -809,12 +781,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun updateCurrentLocation() {
         // 테스트용 하드코딩된 위치 (일시적)
        //광주역 좌표
-//        val testLatitude = 35.165
-//      val testLongitude = 126.909
+        val testLatitude = 35.165
+      val testLongitude = 126.909
 
         //금남로4가 좌표
-        val testLatitude = 35.1488
-        val testLongitude = 126.9154
+//        val testLatitude = 35.1488
+//        val testLongitude = 126.9154
 
         // 하드코딩된 위치로 마커 업데이트
         updateLocationMarker(LatLng(testLatitude, testLongitude))
@@ -921,16 +893,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
         
-        // 데이터베이스에서 직접 위험 도로 확인
-        roadViewModel.roads.value?.forEach { roadData ->
-            if (roadData.severityLevel == "위험") {
-                val distance = calculateDistance(currentPosition, LatLng(roadData.latitude, roadData.longitude))
-                if (distance <= dangerRadius) {
-                    Log.d("MainActivity", "데이터베이스 위험 도로 감지됨: 거리 ${distance}m, 심각도: ${roadData.severityLevel}")
-                    return true
-                }
-            }
-        }
+//        // 데이터베이스에서 직접 위험 도로 확인
+//        roadViewModel.roads.value?.forEach { roadData ->
+//            if (roadData.severityLevel == "위험") {
+//                val distance = calculateDistance(currentPosition, LatLng(roadData.latitude, roadData.longitude))
+//                if (distance <= dangerRadius) {
+//                    Log.d("MainActivity", "데이터베이스 위험 도로 감지됨: 거리 ${distance}m, 심각도: ${roadData.severityLevel}")
+//                    return true
+//                }
+//            }
+//        }
         
         return false
     }
