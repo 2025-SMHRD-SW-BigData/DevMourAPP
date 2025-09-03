@@ -30,6 +30,7 @@ import com.example.devmour.viewmodel.RoadViewModel
 import com.example.devmour.viewmodel.RoadControlViewModel
 
 import com.example.devmour.data.LocationData
+import com.example.devmour.ui.alert.MainActivityAlert
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -242,8 +243,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 알림 버튼 클릭
         btnNotification.setOnClickListener {
-            // TODO: 알림 화면으로 이동
-            android.widget.Toast.makeText(this, "알림 화면", android.widget.Toast.LENGTH_SHORT).show()
+            // MainActivityAlert 로 이동
+            val intent = android.content.Intent(this, MainActivityAlert::class.java)
+            startActivity(intent)
         }
         
         // 메인화면 버튼 클릭 (현재 화면이므로 아무 동작 안함)
