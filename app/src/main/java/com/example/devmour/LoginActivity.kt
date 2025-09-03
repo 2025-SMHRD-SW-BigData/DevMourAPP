@@ -34,7 +34,7 @@ class LoginActivity : AppCompatActivity() {
         val SKIP_LOGIN = true  // 개발 중일 때 true로 설정
 
         if (SKIP_LOGIN) {
-            val intent = Intent(this, MainActivity::class.java)  // 지도가 있는 액티비티
+            val intent = Intent(this, ReportActivity::class.java)  // 민원제보 액티비티
             startActivity(intent)
             finish()
             return  // 아래 기존 로그인 코드들은 실행되지 않음
@@ -69,7 +69,7 @@ class LoginActivity : AppCompatActivity() {
             } else if (token != null) {
                 Toast.makeText(this, "카카오 계정으로 로그인 성공!", Toast.LENGTH_SHORT).show()
                 Log.d("test", "카카오 계정으로 로그인 성공! " + token.accessToken)
-                val intent = Intent(this, LoginActivity2::class.java)
+                val intent = Intent(this, ReportActivity::class.java)
                 startActivity(intent)
                 finish()
             }
@@ -92,7 +92,7 @@ class LoginActivity : AppCompatActivity() {
                     } else if (token != null) {
                         Toast.makeText(this, "카카오톡으로 로그인 성공!", Toast.LENGTH_SHORT).show()
                         Log.d("test", "카카오톡으로 로그인 성공! 토큰: " + token.accessToken)
-                        val intent = Intent(this, LoginActivity2::class.java)
+                        val intent = Intent(this, ReportActivity::class.java)
                         startActivity(intent)
                         finish()
                     }
@@ -110,7 +110,7 @@ class LoginActivity : AppCompatActivity() {
                 override fun onSuccess() {
                     val token = NaverIdLoginSDK.getAccessToken()
                     Log.d("test", "네이버 로그인 성공: accessToken=$token")
-                    val intent = Intent(this@LoginActivity, LoginActivity2::class.java)
+                    val intent = Intent(this@LoginActivity, ReportActivity::class.java)
                     startActivity(intent)
                     finish()
                 }
@@ -154,7 +154,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.d("test", "구글 로그인 성공: email=$email, idToken=$idToken")
                 Toast.makeText(this, "구글 로그인 성공: $email", Toast.LENGTH_SHORT).show()
 
-                val intent = Intent(this, LoginActivity2::class.java)
+                val intent = Intent(this, ReportActivity::class.java)
                 startActivity(intent)
                 finish()
             } catch (e: ApiException) {

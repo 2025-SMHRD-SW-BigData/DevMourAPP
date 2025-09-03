@@ -41,10 +41,11 @@ const upload = multer({
 
 // DB 연결 설정
 const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: '', // 실제 DB 비밀번호로 변경 필요
-    database: 'devmour_db', // 실제 DB 이름으로 변경 필요
+    host: 'project-db-campus.smhrd.com',
+    port: 3307,
+    user: 'campus_25SW_BD_p3_2',
+    password: 'smhrd2',
+    database: 'campus_25SW_BD_p3_2', // 사용자명과 동일한 DB명으로 설정
     charset: 'utf8mb4'
 };
 
@@ -69,6 +70,15 @@ router.post('/submit', upload.fields([
             c_reporter_name = null,
             c_reporter_phone = null
         } = req.body;
+        
+        console.log('받은 데이터:', {
+            addr,
+            c_report_detail,
+            lat,
+            lon,
+            c_reporter_name,
+            c_reporter_phone
+        });
         
         // 필수 필드 검증 (주소는 null 허용)
         if (!c_report_detail) {
@@ -100,10 +110,10 @@ router.post('/submit', upload.fields([
         // DB에 민원 데이터 저장
         const insertQuery = `
             INSERT INTO t_citizen_report (
-                addr,
-                c_report_detail,
+                c_reported_at,
                 lat,
                 lon,
+                c_report_detail,
                 c_report_file1,
                 c_report_file2,
                 c_report_file3,
@@ -111,22 +121,22 @@ router.post('/submit', upload.fields([
                 c_reporter_phone,
                 c_report_status,
                 admin_id,
-                c_reported_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                addr
+            ) VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         
         const [result] = await connection.execute(insertQuery, [
-            addr, // null
-            c_report_detail, // 카테고리 정보
-            lat, // null
-            lon, // null
+            lat, // lat (위도) - 클라이언트에서 전송된 값
+            lon, // lon (경도) - 클라이언트에서 전송된 값
+            c_report_detail, // 카테고리 정보 (도로침수/도로빙결/도로파손)
             filePaths.c_report_file1, // 첫 번째 사진
             filePaths.c_report_file2, // 두 번째 사진
             filePaths.c_report_file3, // 세 번째 사진
-            c_reporter_name, // null
-            c_reporter_phone, // null
-            'pending', // 처리 상태
-            null // admin_id는 null
+            null, // c_reporter_name (제보자 성명) - 아직 연결 안됨
+            null, // c_reporter_phone (제보자 연락처) - 아직 연결 안됨
+            'pending', // c_report_status (처리 상태)
+            null, // admin_id (관리자 ID) - 아직 연결 안됨
+            null // addr (주소) - 아직 연결 안됨
         ]);
         
         console.log('민원 제출 성공:', {
