@@ -31,7 +31,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // ✅ 여기에 추가
-        val SKIP_LOGIN = true  // 개발 중일 때 true로 설정
+        val SKIP_LOGIN = true  // true상태면 로그인은 우선 건너뜀
 
         if (SKIP_LOGIN) {
             val intent = Intent(this, ReportActivity::class.java)  // 민원제보 액티비티

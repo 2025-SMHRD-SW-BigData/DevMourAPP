@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const markersRouter = require('./routes/markers');
 const roadControlsRouter = require('./routes/road-controls');
 const reportsRouter = require('./routes/reports');
@@ -11,6 +12,9 @@ const PORT = 3000; // 명시적으로 포트 3000 사용
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 정적 파일 서빙 - 마커 아이콘 이미지들을 제공
+app.use('/images', express.static(path.join(__dirname, '../app/src/main/res/drawable')));
 
 // 요청 로깅 미들웨어
 app.use((req, res, next) => {
