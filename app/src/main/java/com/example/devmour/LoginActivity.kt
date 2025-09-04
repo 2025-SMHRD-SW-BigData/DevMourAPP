@@ -31,7 +31,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // ✅ 여기에 추가
-        val SKIP_LOGIN = true  // true상태면 로그인은 우선 건너뜀
+        val SKIP_LOGIN = false  // true상태면 로그인은 우선 건너뜀
 
         if (SKIP_LOGIN) {
             val intent = Intent(this, ReportActivity::class.java)  // 민원제보 액티비티
@@ -77,7 +77,7 @@ class LoginActivity : AppCompatActivity() {
         
         btnKakaoLogin.setOnClickListener {
             Log.d("test", "카카오 로그인 버튼 클릭됨")
-            
+
             if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
                 Log.d("test", "카카오톡 앱 설치됨 - 카카오톡으로 로그인 시도")
                 UserApiClient.instance.loginWithKakaoTalk(this) { token, error ->
@@ -151,8 +151,8 @@ class LoginActivity : AppCompatActivity() {
                 val email = account.email
                 val idToken = account.idToken
 
-                Log.d("test", "구글 로그인 성공: email=$email, idToken=$idToken")
-                Toast.makeText(this, "구글 로그인 성공: $email", Toast.LENGTH_SHORT).show()
+                Log.d("test", "구글 로그인 성공!, idToken=$idToken")
+                Toast.makeText(this, "구글 로그인 성공!", Toast.LENGTH_SHORT).show()
 
                 val intent = Intent(this, ReportActivity::class.java)
                 startActivity(intent)

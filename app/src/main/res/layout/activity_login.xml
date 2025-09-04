@@ -14,87 +14,99 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- 1. 상단 로고 -->
+
+    <!-- 2. 환영 문구 -->
+
     <ImageView
         android:id="@+id/logoImage"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="24dp"
         android:contentDescription="앱 로고"
         android:src="@drawable/logo"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.093"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible" />
 
-    <!-- 2. 환영 문구 -->
+    <!-- 여백 (위/아래 구분용) -->
+
     <TextView
         android:id="@+id/welcomeText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="60dp"
-        android:gravity="center"
+        android:layout_marginTop="12dp"
+        android:gravity="left"
         android:text="도로시(SEE)에 오신 것을\n환영합니다."
         android:textColor="#000000"
         android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.256"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/logoImage" />
 
-    <!-- 여백 (위/아래 구분용) -->
     <Space
         android:layout_width="match_parent"
-        android:layout_height="160dp"
+        android:layout_height="80dp"
         app:layout_constraintTop_toBottomOf="@id/welcomeText" />
 
     <!-- 3. SNS 간편 로그인 안내 -->
-    <TextView
-        android:id="@+id/snsText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:text="SNS 간편 로그인"
-        android:textColor="#000000"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@id/btn_kakao"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- 4. 카카오 로그인 버튼 -->
-    <ImageButton
-        android:id="@+id/btn_kakao"
-        android:layout_width="350dp"
-        android:layout_height="62dp"
-        android:layout_marginBottom="20dp"
-        android:background="@drawable/kakao_login_medium_wide"
-        android:contentDescription="카카오 로그인"
-        app:layout_constraintBottom_toTopOf="@id/googleButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- 5. 구글 로그인 버튼 -->
-    <ImageButton
-        android:id="@+id/googleButton"
-        android:layout_width="350dp"
-        android:layout_height="62dp"
-        android:layout_marginBottom="20dp"
-        android:background="@drawable/google_login"
-        android:contentDescription="구글 로그인"
-        app:layout_constraintBottom_toTopOf="@id/btn_naver"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- 6. 네이버 로그인 버튼 (맨 아래) -->
     <ImageButton
         android:id="@+id/btn_naver"
         android:layout_width="350dp"
         android:layout_height="62dp"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="104dp"
         android:background="@drawable/naver_login"
         android:contentDescription="네이버 로그인"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.491"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/snsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:text="SNS 간편 로그인"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toTopOf="@id/btn_kakao"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/googleButton"
+        android:layout_width="350dp"
+        android:layout_height="62dp"
+        android:layout_marginBottom="28dp"
+        android:background="@drawable/google_login"
+        android:contentDescription="구글 로그인"
+        app:layout_constraintBottom_toTopOf="@id/btn_naver"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.491"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btn_kakao"
+        android:layout_width="350dp"
+        android:layout_height="62dp"
+        android:layout_marginBottom="28dp"
+        android:background="@drawable/kakao_login"
+        android:contentDescription="카카오 로그인"
+        app:layout_constraintBottom_toTopOf="@id/googleButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.491"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 6. 네이버 로그인 버튼 (맨 아래) -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
