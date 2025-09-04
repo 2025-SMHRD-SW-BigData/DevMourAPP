@@ -194,7 +194,28 @@ tools:context=".MainActivity">
 
     </androidx.cardview.widget.CardView>
 
+    <!-- 안전마커 토글 버튼 -->
+
     <!-- GPS 위치 이동 버튼 -->
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_toggle_safe_markers"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/safe_marker_toggle_background"
+        android:backgroundTint="@null"
+        android:elevation="4dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:text="안전마커 숨기기"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/navigationBar"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <ImageButton
         android:id="@+id/btn_gps_location"
         android:layout_width="56dp"

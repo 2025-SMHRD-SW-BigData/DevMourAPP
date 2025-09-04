@@ -74,14 +74,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var ivNotification: android.widget.ImageView
     private lateinit var ivMain: android.widget.ImageView
     private lateinit var ivReport: android.widget.ImageView
-    
+
     // 마커 리스트를 저장할 변수
     private val markers = mutableListOf<Marker>()
     private val controlMarkers = mutableListOf<Marker>()
-    private val floodMarkers = mutableListOf<Marker>() // 홍수 마커
+    private val floodMarkers = mutableListOf<Marker>() // 침수 마커
     private val locationMarkers = mutableListOf<Marker>() // 위치 검색 마커
     private val overlayImageCache = mutableMapOf<Int, OverlayImage>()
     
+    // 안전마커 토글 상태 관리
+    private var isSafeMarkersVisible = true
+
     // 광주시 위치 데이터 (하드코딩) - 실제 좌표 사용
     private val gwangjuLocations = listOf(
         // 광산구 (실제 중심 좌표)
@@ -213,7 +216,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
         setContentView(R.layout.activity_main)
 
 
@@ -256,10 +258,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         ivNotification = findViewById(R.id.ivNotification)
         ivMain = findViewById(R.id.ivMain)
         ivReport = findViewById(R.id.ivReport)
-        
+
         // GPS 위치 이동 버튼 초기화
         val btnGpsLocation = findViewById<android.widget.ImageButton>(R.id.btn_gps_location)
         
+        // 안전마커 토글 버튼 초기화
+        val btnToggleSafeMarkers = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_toggle_safe_markers)
+
         // 알림 버튼 클릭
         btnNotification.setOnClickListener {
             // MainActivityAlert 로 이동
@@ -291,9 +296,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             moveToCurrentLocation()
         }
         
+        // 안전마커 토글 버튼 클릭
+        btnToggleSafeMarkers.setOnClickListener {
+            toggleSafeMarkers()
+            updateSafeMarkerToggleButton(btnToggleSafeMarkers)
+        }
+
+        // 초기 버튼 상태 설정
+        updateSafeMarkerToggleButton(btnToggleSafeMarkers)
+
+        // 현재 메인화면이므로 메인화면 아이콘 텍스트 색상을 강조
+        (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#2f354f"))
+            }
+        }
         // 현재 메인화면이므로 메인화면 아이콘과 텍스트 색상을 강조
         setNavigationBarState("main")
-        
+
         // 기존 검색 버튼을 위치 검색 기능과 연결
         val searchButton = findViewById<android.widget.Button>(R.id.btnSearch)
         val searchEditText = findViewById<android.widget.EditText>(R.id.etSearch)
@@ -367,7 +387,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         ivNotification.setImageResource(R.drawable.alarm_w)
         ivMain.setImageResource(R.drawable.main_w)
         ivReport.setImageResource(R.drawable.report_w)
-        
+
         // 모든 텍스트를 기본 색상으로 초기화
         (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
             if (textView is android.widget.TextView) {
@@ -384,7 +404,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 textView.setTextColor(Color.parseColor("#666666"))
             }
         }
-        
+
         // 현재 페이지에 따라 아이콘과 텍스트 색상 설정
         when (currentPage) {
             "notification" -> {
@@ -413,7 +433,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     // total_score를 기준으로 마커 아이콘을 결정하는 함수
     private fun getMarkerIconByScore(totalScore: Double): Int {
         return when {
@@ -491,9 +511,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         marker.width = 150
                         marker.height = 150
                         
-                        // 마커 툴팁에 등급과 점수 정보 표시
-                        val grade = getGradeByScore(roadData.totalScore)
-                        marker.captionText = "${grade} 등급 (점수: ${roadData.totalScore})"
+//                        // 마커 툴팁에 등급과 점수 정보 표시
+//                        val grade = getGradeByScore(roadData.totalScore)
+//                        marker.captionText = "${grade} 등급 (점수: ${roadData.totalScore})"
                         
                     } catch (e: Exception) {
                         Log.e("MainActivity", "마커 아이콘 설정 실패: ${e.message}")
@@ -645,16 +665,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun observeFloodData() {
-        Log.d("MainActivity", "=== 홍수 Observer 설정 시작 ===")
+        Log.d("MainActivity", "=== 침수 Observer 설정 시작 ===")
 
         roadControlViewModel.floodData.observe(this) { floodList ->
-            Log.d("MainActivity", "=== 홍수 Observer 시작 ===")
-            Log.d("MainActivity", "현재 홍수 마커 수: ${floodMarkers.size}")
-            Log.d("MainActivity", "받은 홍수 리스트: ${floodList?.size}개")
+            Log.d("MainActivity", "=== 침수 Observer 시작 ===")
+            Log.d("MainActivity", "현재 침수 마커 수: ${floodMarkers.size}")
+            Log.d("MainActivity", "받은 침수 리스트: ${floodList?.size}개")
 
             // null 체크 추가
             if (floodList == null) {
-                Log.w("MainActivity", "홍수 리스트가 null임 - 처리중단")
+                Log.w("MainActivity", "침수 리스트가 null임 - 처리중단")
                 return@observe
             }
 
@@ -664,23 +684,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 return@observe
             }
 
-            Log.d("MainActivity", "모든 조건 통과 - 홍수 마커 처리 시작")
+            Log.d("MainActivity", "모든 조건 통과 - 침수 마커 처리 시작")
 
-            // 기존 홍수 마커들 제거
-            Log.d("MainActivity", "기존 홍수 마커 제거: ${floodMarkers.size}개")
+            // 기존 침수 마커들 제거
+            Log.d("MainActivity", "기존 침수 마커 제거: ${floodMarkers.size}개")
             floodMarkers.forEach { marker ->
                 marker.map = null  // 지도에서 마커 제거
             }
             floodMarkers.clear()
-            Log.d("MainActivity", "기존 홍수 마커들 제거 완료")
+            Log.d("MainActivity", "기존 침수 마커들 제거 완료")
 
-            // 홍수 리스트가 비어있는지 확인
+            // 침수 리스트가 비어있는지 확인
             if (floodList.isEmpty()) {
-                Log.w("MainActivity", "받은 홍수 리스트가 비어있음!")
+                Log.w("MainActivity", "받은 침수 리스트가 비어있음!")
                 return@observe
             }
 
-            // 새로운 홍수 마커들 추가
+            // 새로운 침수 마커들 추가
             floodList.forEachIndexed { index, floodData ->
                 try {
                     val marker = Marker()
@@ -695,16 +715,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     )
                     marker.map = naverMap
 
-                    // 홍수 마커 아이콘 설정
+                    // 침수 마커 아이콘 설정
                     marker.icon = getTransparentOverlay(R.drawable.marker_flood)
                     marker.width = 150
                     marker.height = 150
                     
                     marker.tag = "FLOOD_${floodData.controlIdx}"
 
-                    // 홍수 마커 클릭 이벤트 설정 - 다이얼로그 표시
+                    // 침수 마커 클릭 이벤트 설정 - 다이얼로그 표시
                     marker.setOnClickListener { overlay ->
-                        val message = "🌊 홍수 위험 구역\n\n" +
+                        val message =
                                 "📝 설명: ${floodData.controlDesc}\n" +
                                 "🕐 시작: ${floodData.controlStTm}\n" +
                                 "🕐 종료: ${floodData.controlEdTm ?: "미정"}\n" +
@@ -713,7 +733,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                                 "✅ 완료 여부: ${if (floodData.completed == "Y") "완료" else "진행중"}"
                         
                         val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
-                            .setTitle("🌊 홍수 위험 구역 정보")
+                            .setTitle("🌊 침수 위험 구역 정보")
                             .setMessage(message)
                             .setPositiveButton("확인") { dialog, _ ->
                                 dialog.dismiss()
@@ -731,23 +751,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     floodMarkers.add(marker)
 
-                    Log.d("MainActivity", "[$index] 홍수 마커 위치: 원본=(${floodData.latitude}, ${floodData.longitude}), 조정=(${marker.position.latitude}, ${marker.position.longitude})")
+                    Log.d("MainActivity", "[$index] 침수 마커 위치: 원본=(${floodData.latitude}, ${floodData.longitude}), 조정=(${marker.position.latitude}, ${marker.position.longitude})")
 
                 } catch (e: Exception) {
-                    Log.e("MainActivity", "[$index] 홍수 마커 생성 실패: ${e.message}")
+                    Log.e("MainActivity", "[$index] 침수 마커 생성 실패: ${e.message}")
                 }
             }
 
             // 마커 생성 완료 후 추가
-            Log.d("MainActivity", "홍수 마커 생성 완료: ${floodMarkers.size}개")
+            Log.d("MainActivity", "침수 마커 생성 완료: ${floodMarkers.size}개")
             Log.d("MainActivity", "현재 도로 마커 수: ${markers.size}개 (변경되지 않아야 함)")
             Log.d("MainActivity", "현재 통제 마커 수: ${controlMarkers.size}개 (변경되지 않아야 함)")
 
             // 실제로 지도에 표시된 마커 개수 확인
             val visibleFloodMarkers = floodMarkers.count { it.map != null }
-            Log.d("MainActivity", "지도에 실제 표시된 홍수 마커 수: ${visibleFloodMarkers}")
+            Log.d("MainActivity", "지도에 실제 표시된 침수 마커 수: ${visibleFloodMarkers}")
 
-            Log.d("MainActivity", "최종: ${floodMarkers.size}개 홍수 마커 추가 완료")
+            Log.d("MainActivity", "최종: ${floodMarkers.size}개 침수 마커 추가 완료")
         }
     }
 
@@ -755,7 +775,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.d("MainActivity", "=== 마커 상태 확인 ===")
         Log.d("MainActivity", "도로 마커: ${markers.size}개")
         Log.d("MainActivity", "통제 마커: ${controlMarkers.size}개")
-        Log.d("MainActivity", "홍수 마커: ${floodMarkers.size}개")
+        Log.d("MainActivity", "침수 마커: ${floodMarkers.size}개")
 
         val visibleRoadMarkers = markers.count { it.map != null }
         val visibleControlMarkers = controlMarkers.count { it.map != null }
@@ -763,7 +783,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         Log.d("MainActivity", "실제 표시된 도로 마커: ${visibleRoadMarkers}개")
         Log.d("MainActivity", "실제 표시된 통제 마커: ${visibleControlMarkers}개")
-        Log.d("MainActivity", "실제 표시된 홍수 마커: ${visibleFloodMarkers}개")
+        Log.d("MainActivity", "실제 표시된 침수 마커: ${visibleFloodMarkers}개")
     }
 
     @UiThread
@@ -815,8 +835,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.d("MainActivity", "도로 통제 데이터 로드 시작")
         roadControlViewModel.loadRoadControls()
         
-        // 홍수 데이터 로드
-        Log.d("MainActivity", "홍수 데이터 로드 시작")
+        // 침수 데이터 로드
+        Log.d("MainActivity", "침수 데이터 로드 시작")
         roadControlViewModel.loadFloodData()
         
         // 테스트 위치 마커 즉시 표시
@@ -1361,7 +1381,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // 파동 오버레이들 정리
         clearRippleOverlays()
         
-        // 홍수 마커들 정리
+        // 침수 마커들 정리
         floodMarkers.forEach { marker ->
             marker.map = null
         }
@@ -1369,9 +1389,36 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         currentLocationMarker?.map = null
         currentLocationMarker = null
-        
+
         // 앱이 정상 종료될 때 정리 작업 수행
         SessionManager.markCleanExit(this, true)
+    }
+
+    // 안전마커 토글 기능
+    private fun toggleSafeMarkers() {
+        isSafeMarkersVisible = !isSafeMarkersVisible
+        updateSafeMarkersVisibility()
+
+//        val message = if (isSafeMarkersVisible) "안전마커가 표시됩니다" else "안전마커가 숨겨집니다"
+//        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    // 안전마커 표시/숨김 상태 업데이트
+    private fun updateSafeMarkersVisibility() {
+        roadViewModel.roads.value?.forEachIndexed { index, roadData ->
+            val marker = markers.getOrNull(index) ?: return@forEachIndexed
+
+            // 안전마커 (totalScore 0.0 ~ 4.0)만 토글 적용
+            if (roadData.totalScore >= 0.0 && roadData.totalScore <= 4.0) {
+                marker.map = if (isSafeMarkersVisible) naverMap else null
+            }
+        }
+    }
+
+    // 안전마커 토글 버튼 상태 업데이트
+    private fun updateSafeMarkerToggleButton(button: androidx.appcompat.widget.AppCompatButton) {
+        button.isSelected = isSafeMarkersVisible
+        button.text = if (isSafeMarkersVisible) "안전마커 숨기기" else "안전마커 보이기"
     }
 }
 
