@@ -70,6 +70,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var btnMain: android.view.View
     private lateinit var btnReport: android.view.View
     
+    // 네비게이션 바 아이콘들
+    private lateinit var ivNotification: android.widget.ImageView
+    private lateinit var ivMain: android.widget.ImageView
+    private lateinit var ivReport: android.widget.ImageView
+    
     // 마커 리스트를 저장할 변수
     private val markers = mutableListOf<Marker>()
     private val controlMarkers = mutableListOf<Marker>()
@@ -209,15 +214,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // 로그인 상태 확인
-        if (!LoginManager.isLoggedIn(this) || !LoginManager.isTokenValid(this)) {
-            // 로그인되지 않았거나 토큰이 유효하지 않은 경우 로그인 화면으로 이동
-            val intent = Intent(this, com.example.devmour.LoginActivity::class.java)
-            startActivity(intent)
-            finish()
-            return
-        }
-        
         setContentView(R.layout.activity_main)
 
 
@@ -256,6 +252,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnMain = findViewById(R.id.btnMain)
         btnReport = findViewById(R.id.btnReport)
         
+        // 네비게이션 바 아이콘들 초기화
+        ivNotification = findViewById(R.id.ivNotification)
+        ivMain = findViewById(R.id.ivMain)
+        ivReport = findViewById(R.id.ivReport)
+        
         // GPS 위치 이동 버튼 초기화
         val btnGpsLocation = findViewById<android.widget.ImageButton>(R.id.btn_gps_location)
         
@@ -273,9 +274,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 민원접수 버튼 클릭
         btnReport.setOnClickListener {
-            // ReportActivity로 이동
-            val intent = android.content.Intent(this, ReportActivity::class.java)
-            startActivity(intent)
+            // 로그인 상태 확인
+            if (LoginManager.isLoggedIn(this) && LoginManager.isTokenValid(this)) {
+                // 이미 로그인된 경우 ReportActivity로 바로 이동
+                val intent = android.content.Intent(this, ReportActivity::class.java)
+                startActivity(intent)
+            } else {
+                // 로그인되지 않은 경우 LoginActivity로 이동
+                val intent = android.content.Intent(this, com.example.devmour.LoginActivity::class.java)
+                startActivity(intent)
+            }
         }
         
         // GPS 위치 이동 버튼 클릭
@@ -283,12 +291,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             moveToCurrentLocation()
         }
         
-        // 현재 메인화면이므로 메인화면 아이콘 텍스트 색상을 강조
-        (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-            if (textView is android.widget.TextView) {
-                textView.setTextColor(Color.parseColor("#2f354f"))
-            }
-        }
+        // 현재 메인화면이므로 메인화면 아이콘과 텍스트 색상을 강조
+        setNavigationBarState("main")
         
         // 기존 검색 버튼을 위치 검색 기능과 연결
         val searchButton = findViewById<android.widget.Button>(R.id.btnSearch)
@@ -353,6 +357,59 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 true
             } else {
                 false
+            }
+        }
+    }
+    
+    // 네비게이션 바 상태 설정 함수
+    private fun setNavigationBarState(currentPage: String) {
+        // 모든 아이콘을 기본 상태(흰색)로 초기화
+        ivNotification.setImageResource(R.drawable.alarm_w)
+        ivMain.setImageResource(R.drawable.main_w)
+        ivReport.setImageResource(R.drawable.report_w)
+        
+        // 모든 텍스트를 기본 색상으로 초기화
+        (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+        (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+        (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+        
+        // 현재 페이지에 따라 아이콘과 텍스트 색상 설정
+        when (currentPage) {
+            "notification" -> {
+                ivNotification.setImageResource(R.drawable.alarm_b)
+                (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+            "main" -> {
+                ivMain.setImageResource(R.drawable.main_b)
+                (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+            "report" -> {
+                ivReport.setImageResource(R.drawable.report_b)
+                (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
             }
         }
     }

@@ -33,13 +33,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 로그인 상태 확인 - 이미 로그인된 경우 민원접수 페이지로 이동
-        if (LoginManager.isLoggedIn(this) && LoginManager.isTokenValid(this)) {
-            val intent = Intent(this, ReportActivity::class.java)
-            startActivity(intent)
-            finish()
-            return
-        }
+        // 로그인 화면을 항상 표시하도록 수정
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_login)
