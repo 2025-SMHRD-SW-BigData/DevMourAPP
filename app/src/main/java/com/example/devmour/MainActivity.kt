@@ -33,6 +33,7 @@ import com.example.devmour.viewmodel.RoadControlViewModel
 import com.example.devmour.data.LocationData
 import com.example.devmour.ui.alert.MainActivityAlert
 import com.example.devmour.auth.LoginManager
+import com.example.devmour.auth.SessionManager
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -1150,6 +1151,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         currentLocationMarker?.map = null
         currentLocationMarker = null
+        
+        // 앱이 정상 종료될 때 정리 작업 수행
+        SessionManager.markCleanExit(this, true)
     }
 }
 

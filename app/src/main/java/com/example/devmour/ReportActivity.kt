@@ -38,6 +38,7 @@ import com.naver.maps.geometry.LatLng
 import android.graphics.Color
 import com.example.devmour.data.LocationData
 import com.example.devmour.auth.LoginManager
+import com.example.devmour.auth.SessionManager
 
 class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     
@@ -893,6 +894,15 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
         finish()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // 리소스 정리
+        cleanupResources()
+        
+        // 앱이 정상 종료될 때 정리 작업 수행
+        SessionManager.markCleanExit(this, true)
     }
     
 }

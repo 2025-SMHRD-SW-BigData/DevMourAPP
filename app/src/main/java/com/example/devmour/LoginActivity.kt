@@ -23,6 +23,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.example.devmour.auth.LoginManager
 import com.example.devmour.auth.LoginState
+import com.example.devmour.auth.SessionManager
 
 class LoginActivity : AppCompatActivity() {
 
@@ -205,5 +206,11 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "구글 로그인 실패: 코드=${e.statusCode}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // 앱이 정상 종료될 때 정리 작업 수행
+        SessionManager.markCleanExit(this, true)
     }
 }
