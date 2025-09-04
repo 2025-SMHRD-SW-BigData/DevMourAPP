@@ -1,5 +1,6 @@
 package com.example.devmour
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -31,6 +32,7 @@ import com.example.devmour.viewmodel.RoadControlViewModel
 
 import com.example.devmour.data.LocationData
 import com.example.devmour.ui.alert.MainActivityAlert
+import com.example.devmour.auth.LoginManager
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -204,6 +206,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // 로그인 상태 확인
+        if (!LoginManager.isLoggedIn(this) || !LoginManager.isTokenValid(this)) {
+            // 로그인되지 않았거나 토큰이 유효하지 않은 경우 로그인 화면으로 이동
+            val intent = Intent(this, com.example.devmour.LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
+        
         setContentView(R.layout.activity_main)
 
 

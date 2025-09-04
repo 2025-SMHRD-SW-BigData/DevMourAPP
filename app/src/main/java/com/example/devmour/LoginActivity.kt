@@ -21,6 +21,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.example.devmour.auth.LoginManager
+import com.example.devmour.auth.LoginState
 
 class LoginActivity : AppCompatActivity() {
 
@@ -30,14 +32,12 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ 여기에 추가
-        val SKIP_LOGIN = false  // true상태면 로그인은 우선 건너뜀
-
-        if (SKIP_LOGIN) {
-            val intent = Intent(this, ReportActivity::class.java)  // 민원제보 액티비티
+        // 로그인 상태 확인 - 이미 로그인된 경우 민원접수 페이지로 이동
+        if (LoginManager.isLoggedIn(this) && LoginManager.isTokenValid(this)) {
+            val intent = Intent(this, ReportActivity::class.java)
             startActivity(intent)
             finish()
-            return  // 아래 기존 로그인 코드들은 실행되지 않음
+            return
         }
 
         enableEdgeToEdge()
@@ -69,9 +69,20 @@ class LoginActivity : AppCompatActivity() {
             } else if (token != null) {
                 Toast.makeText(this, "카카오 계정으로 로그인 성공!", Toast.LENGTH_SHORT).show()
                 Log.d("test", "카카오 계정으로 로그인 성공! " + token.accessToken)
+                
+                // 로그인 상태 저장
+                val loginState = LoginState(
+                    isLoggedIn = true,
+                    loginType = "kakao",
+                    accessToken = token.accessToken,
+                    userId = "kakao_user",
+                    loginTime = System.currentTimeMillis()
+                )
+                LoginManager.saveLoginState(this, loginState)
+                
                 val intent = Intent(this, ReportActivity::class.java)
                 startActivity(intent)
-                finish()
+                finishAffinity() // 앱 스택 정리
             }
         }
         
@@ -92,9 +103,20 @@ class LoginActivity : AppCompatActivity() {
                     } else if (token != null) {
                         Toast.makeText(this, "카카오톡으로 로그인 성공!", Toast.LENGTH_SHORT).show()
                         Log.d("test", "카카오톡으로 로그인 성공! 토큰: " + token.accessToken)
+                        
+                        // 로그인 상태 저장
+                        val loginState = LoginState(
+                            isLoggedIn = true,
+                            loginType = "kakao",
+                            accessToken = token.accessToken,
+                            userId = "kakao_user",
+                            loginTime = System.currentTimeMillis()
+                        )
+                        LoginManager.saveLoginState(this, loginState)
+                        
                         val intent = Intent(this, ReportActivity::class.java)
                         startActivity(intent)
-                        finish()
+                        finishAffinity() // 앱 스택 정리
                     }
                 }
             } else {
@@ -110,9 +132,20 @@ class LoginActivity : AppCompatActivity() {
                 override fun onSuccess() {
                     val token = NaverIdLoginSDK.getAccessToken()
                     Log.d("test", "네이버 로그인 성공: accessToken=$token")
+                    
+                    // 로그인 상태 저장
+                    val loginState = LoginState(
+                        isLoggedIn = true,
+                        loginType = "naver",
+                        accessToken = token ?: "",
+                        userId = "naver_user",
+                        loginTime = System.currentTimeMillis()
+                    )
+                    LoginManager.saveLoginState(this@LoginActivity, loginState)
+                    
                     val intent = Intent(this@LoginActivity, ReportActivity::class.java)
                     startActivity(intent)
-                    finish()
+                    finishAffinity() // 앱 스택 정리
                 }
 
                 override fun onFailure(httpStatus: Int, message: String) {
@@ -154,9 +187,19 @@ class LoginActivity : AppCompatActivity() {
                 Log.d("test", "구글 로그인 성공!, idToken=$idToken")
                 Toast.makeText(this, "구글 로그인 성공!", Toast.LENGTH_SHORT).show()
 
+                // 로그인 상태 저장
+                val loginState = LoginState(
+                    isLoggedIn = true,
+                    loginType = "google",
+                    accessToken = idToken ?: "",
+                    userId = email ?: "google_user",
+                    loginTime = System.currentTimeMillis()
+                )
+                LoginManager.saveLoginState(this, loginState)
+
                 val intent = Intent(this, ReportActivity::class.java)
                 startActivity(intent)
-                finish()
+                finishAffinity() // 앱 스택 정리
             } catch (e: ApiException) {
                 Log.e("test", "구글 로그인 실패, 코드=${e.statusCode}, 메시지=${e.message}")
                 Toast.makeText(this, "구글 로그인 실패: 코드=${e.statusCode}", Toast.LENGTH_SHORT).show()

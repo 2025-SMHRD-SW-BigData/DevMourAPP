@@ -37,6 +37,7 @@ import com.naver.maps.map.util.MarkerIcons
 import com.naver.maps.geometry.LatLng
 import android.graphics.Color
 import com.example.devmour.data.LocationData
+import com.example.devmour.auth.LoginManager
 
 class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     
@@ -209,6 +210,16 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // 로그인 상태 확인
+        if (!LoginManager.isLoggedIn(this) || !LoginManager.isTokenValid(this)) {
+            // 로그인되지 않았거나 토큰이 유효하지 않은 경우 로그인 화면으로 이동
+            val intent = Intent(this, com.example.devmour.LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
+        
         setContentView(R.layout.activity_report)
         
         initViews()
@@ -324,6 +335,9 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         
         findViewById<LinearLayout>(R.id.btnMain).setOnClickListener {
             // 메인화면으로 이동
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(intent)
             finish()
         }
         
@@ -870,6 +884,15 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         } catch (e: Exception) {
             Log.e("ReportActivity", "리소스 정리 중 오류: ${e.message}", e)
         }
+    }
+    
+    // 뒤로가기 버튼 처리
+    override fun onBackPressed() {
+        // 메인화면으로 이동
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(intent)
+        finish()
     }
     
 }

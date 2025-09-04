@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.kakao.sdk.user.UserApiClient
+import com.example.devmour.auth.LoginManager
 
 class LoginActivity2 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,8 +37,12 @@ class LoginActivity2 : AppCompatActivity() {
             // NidOAuthLogin.logout()
             Log.i("test", "네이버 로그아웃 완료")
             
+            // 로그인 상태 정리
+            LoginManager.logout(this)
+            
             // 로그아웃 후 로그인 화면으로 돌아가기
             val intent = Intent(this, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
             finish()
         }
