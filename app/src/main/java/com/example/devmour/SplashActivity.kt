@@ -20,7 +20,7 @@ class SplashActivity : AppCompatActivity() {
                     // 모든 OAuth 제공자 로그아웃 완료 후
                     LoginManager.logout(this) // 로컬 로그인 상태도 초기화
                     SessionManager.clearAll(this)
-                    goLogin()
+                    goMain()
                 }
                 return
             } else {
@@ -36,10 +36,10 @@ class SplashActivity : AppCompatActivity() {
         // 항상 메인 화면으로 이동 (로그인 상태는 MainActivity에서 확인)
         goMain()
     }
-    
-    private fun goLogin() { 
+
+    private fun goLogin() {
         startActivity(Intent(this, LoginActivity::class.java))
-        finish() 
+        finish()
     }
     
     private fun goMain() { 
