@@ -30,6 +30,7 @@ import com.example.devmour.viewmodel.RoadViewModel
 import com.example.devmour.viewmodel.RoadControlViewModel
 
 import com.example.devmour.data.LocationData
+import com.example.devmour.ui.alert.MainActivityAlert
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -242,8 +243,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 알림 버튼 클릭
         btnNotification.setOnClickListener {
-            // TODO: 알림 화면으로 이동
-            android.widget.Toast.makeText(this, "알림 화면", android.widget.Toast.LENGTH_SHORT).show()
+            // MainActivityAlert 로 이동
+            val intent = android.content.Intent(this, MainActivityAlert::class.java)
+            startActivity(intent)
         }
         
         // 메인화면 버튼 클릭 (현재 화면이므로 아무 동작 안함)
@@ -782,8 +784,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //        val testLatitude = 35.1488
 //        val testLongitude = 126.9154
       //임동오거리
-        val testLatitude =  35.1750
-        val testLongitude = 126.9370
+        val testLatitude =  35.159588
+        val testLongitude = 126.899809
 
         // 하드코딩된 위치로 마커 업데이트
         updateLocationMarker(LatLng(testLatitude, testLongitude))
@@ -834,72 +836,74 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.d("MainActivity", "위험 구역 상태 변경: $isInDangerZone")
         }
         
-        if (currentLocationMarker == null) {
-            // 마커는 생성하지 않고 파동 애니메이션만 시작
-            currentLocationMarker = Marker().apply {
-                this.position = position
-                this.map = null  // 지도에 표시하지 않음
-                this.tag = "CURRENT_LOCATION"
-            }
+                 if (currentLocationMarker == null) {
+             // 현재 위치 마커 생성 및 표시
+             currentLocationMarker = Marker().apply {
+                 this.position = position
+                 this.map = naverMap
+                 this.tag = "CURRENT_LOCATION"
+                 
+                 // 위험 구역 여부에 따라 마커 색상 설정
+                 if (isInDangerZone) {
+                     // 위험 구역일 때는 마커를 표시하지 않고 파동 효과만 표시
+                     this.map = null
+                     Log.d("MainActivity", "현재 위치 마커: 숨김 (위험 구역) - 파동 효과만 표시")
+                 } else {
+                     this.icon = MarkerIcons.BLUE
+                     this.iconTintColor = Color.BLUE
+                     this.width = 80
+                     this.height = 80
+                     this.captionText = "현재 위치"
+                     Log.d("MainActivity", "현재 위치 마커: 파란색 (안전 구역)")
+                 }
+             }
             
             Log.d("MainActivity", "위치 추적 시작: ${position}")
             
             // 파동 애니메이션 시작
             startPulsingAnimation()
         } else {
-            // 기존 마커 위치만 업데이트 (화면에는 표시되지 않음)
+            // 기존 마커 위치 업데이트
             currentLocationMarker?.position = position
             
-            // 위험 구역 상태가 변경되었으면 애니메이션 재시작
-            if (isInDangerZone != wasInDangerZone) {
-                startPulsingAnimation()
-            }
+                         // 위험 구역 상태가 변경되었으면 마커 표시/숨김과 애니메이션 재시작
+             if (isInDangerZone != wasInDangerZone) {
+                 currentLocationMarker?.let { marker ->
+                     if (isInDangerZone) {
+                         // 위험 구역일 때는 마커를 숨기고 파동 효과만 표시
+                         marker.map = null
+                         Log.d("MainActivity", "현재 위치 마커 숨김: 위험 구역 - 파동 효과만 표시")
+                     } else {
+                         // 안전 구역일 때는 마커를 표시
+                         marker.map = naverMap
+                         marker.icon = MarkerIcons.BLUE
+                         marker.iconTintColor = Color.BLUE
+                         marker.captionText = "현재 위치 (안전 구역)"
+                         Log.d("MainActivity", "현재 위치 마커 표시: 파란색 (안전 구역)")
+                     }
+                 }
+                 
+                 startPulsingAnimation()
+             }
             
             Log.d("MainActivity", "위치 업데이트됨: $position")
         }
     }
     
-    // 위험 구역 감지 함수 (t_road 테이블의 severity_level이 "위험"인 행들과의 거리 계산)
+    // 위험 구역 감지 함수 (total_score 7.1~10.0 범위의 마커와의 거리 계산)
     private fun checkDangerZone(currentPosition: LatLng): Boolean {
         val dangerRadius = 300.0 // 300미터 반경
         
-        // 도로 마커들 중 위험한 마커 확인
-        markers.forEach { marker ->
-            if (marker.tag?.toString()?.startsWith("ROAD_") == true) {
-                val distance = calculateDistance(currentPosition, marker.position)
+        // 도로 마커들 중 위험한 마커 확인 (total_score 7.1~10.0)
+        roadViewModel.roads.value?.forEach { roadData ->
+            if (roadData.totalScore >= 7.1 && roadData.totalScore <= 10.0) {
+                val distance = calculateDistance(currentPosition, LatLng(roadData.latitude, roadData.longitude))
                 if (distance <= dangerRadius) {
-                    // 위험 마커인지 확인 (빨간색 마커 또는 severity_level이 "위험"인 경우)
-                    try {
-                        // 마커 태그에서 위험 정보 확인
-                        val markerTag = marker.tag.toString()
-                        if (markerTag.contains("위험") || markerTag.contains("DANGER")) {
-                            Log.d("MainActivity", "위험 마커 감지됨: 거리 ${distance}m, 태그: $markerTag")
-                            return true
-                        }
-                        
-                        // 아이콘 색상으로도 확인 (빨간색 마커)
-                        if (marker.iconTintColor == Color.RED) {
-                            Log.d("MainActivity", "빨간색 위험 마커 감지됨: 거리 ${distance}m")
-                            return true
-                        }
-                        
-                    } catch (e: Exception) {
-                        Log.e("MainActivity", "마커 위험도 확인 실패: ${e.message}")
-                    }
+                    Log.d("MainActivity", "위험 마커 감지됨: 거리 ${distance}m, total_score: ${roadData.totalScore}")
+                    return true
                 }
             }
         }
-        
-//        // 데이터베이스에서 직접 위험 도로 확인
-//        roadViewModel.roads.value?.forEach { roadData ->
-//            if (roadData.severityLevel == "위험") {
-//                val distance = calculateDistance(currentPosition, LatLng(roadData.latitude, roadData.longitude))
-//                if (distance <= dangerRadius) {
-//                    Log.d("MainActivity", "데이터베이스 위험 도로 감지됨: 거리 ${distance}m, 심각도: ${roadData.severityLevel}")
-//                    return true
-//                }
-//            }
-//        }
         
         return false
     }

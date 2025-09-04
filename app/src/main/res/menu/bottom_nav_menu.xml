@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_notification"
+        android:icon="@drawable/bell"
+        android:title="알림"/>
+
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/home_button"
+        android:title="메인화면"/>
+
+
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/report"
+        android:title="민원접수" />
+
+</menu>
