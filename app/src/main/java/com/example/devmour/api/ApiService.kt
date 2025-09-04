@@ -19,6 +19,9 @@ interface ApiService {
     @GET("api/road-controls")
     suspend fun getRoadControls(): ApiResponse<RoadControl>
     
+    @GET("api/road-controls/flood")
+    suspend fun getFloodData(): ApiResponse<RoadControl>
+    
     @Multipart
     @POST("api/reports/submit")
     suspend fun submitReport(

@@ -70,4 +70,66 @@ router.get('/', async (req, res) => {
     }
 });
 
+// 홍수 데이터 조회 - t_road_control 테이블에서 control_type이 "flood"인 데이터만 조회
+router.get('/flood', async (req, res) => {
+    try {
+        // 데이터베이스 연결
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // t_road_control 테이블에서 control_type이 "flood"이고 lat, lon이 null이 아닌 데이터만 조회
+        const [rows] = await connection.execute(`
+            SELECT 
+                control_idx,
+                pred_idx,
+                control_desc,
+                control_st_tm,
+                control_ed_tm,
+                created_at,
+                road_idx,
+                lat,
+                lon,
+                control_addr,
+                control_type,
+                completed
+            FROM t_road_control
+            WHERE control_type = 'flood' 
+            AND lat IS NOT NULL 
+            AND lon IS NOT NULL
+            ORDER BY control_idx
+        `);
+        
+        await connection.end();
+        
+        // 응답 데이터 형식에 맞게 변환
+        const floodData = rows.map(row => ({
+            control_idx: row.control_idx,
+            pred_idx: row.pred_idx,
+            control_desc: row.control_desc,
+            control_st_tm: row.control_st_tm,
+            control_ed_tm: row.control_ed_tm,
+            created_at: row.created_at,
+            road_idx: row.road_idx,
+            lat: parseFloat(row.lat),
+            lon: parseFloat(row.lon),
+            control_addr: row.control_addr,
+            control_type: row.control_type,
+            completed: row.completed
+        }));
+        
+        res.json({
+            success: true,
+            message: '홍수 데이터 조회 성공',
+            data: floodData
+        });
+        
+    } catch (error) {
+        console.error('홍수 데이터 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '홍수 데이터 조회에 실패했습니다',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

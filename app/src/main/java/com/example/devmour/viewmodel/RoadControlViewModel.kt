@@ -15,6 +15,9 @@ class RoadControlViewModel : ViewModel() {
     private val _roadControls = MutableLiveData<List<RoadControl>>()
     val roadControls: LiveData<List<RoadControl>> = _roadControls
     
+    private val _floodData = MutableLiveData<List<RoadControl>>()
+    val floodData: LiveData<List<RoadControl>> = _floodData
+    
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
     
@@ -49,6 +52,40 @@ class RoadControlViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("RoadControlViewModel", "도로 통제 데이터 로드 실패", e)
                 _error.value = "도로 통제 데이터를 불러오는데 실패했습니다: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadFloodData() {
+        Log.d("RoadControlViewModel", "홍수 데이터 로드 시작")
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                Log.d("RoadControlViewModel", "홍수 API 호출 시작")
+                
+                val result = repository.getFloodData()
+                result.fold(
+                    onSuccess = { floodList ->
+                        Log.d("RoadControlViewModel", "홍수 API 호출 완료. 받은 홍수 데이터 수: ${floodList.size}")
+                        
+                        if (floodList.isNotEmpty()) {
+                            Log.d("RoadControlViewModel", "첫 번째 홍수 데이터: ${floodList[0]}")
+                        }
+                        
+                        _floodData.value = floodList
+                        Log.d("RoadControlViewModel", "홍수 데이터 로드 완료")
+                    },
+                    onFailure = { exception ->
+                        Log.e("RoadControlViewModel", "홍수 데이터 로드 실패", exception)
+                        _error.value = "홍수 데이터를 불러오는데 실패했습니다: ${exception.message}"
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e("RoadControlViewModel", "홍수 데이터 로드 실패", e)
+                _error.value = "홍수 데이터를 불러오는데 실패했습니다: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

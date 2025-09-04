@@ -21,4 +21,18 @@ class RoadControlRepository {
             Result.failure(e)
         }
     }
+    
+    suspend fun getFloodData(): Result<List<RoadControl>> = withContext(Dispatchers.IO) {
+        try {
+            // 홍수 데이터 API 호출
+            val response = apiService.getFloodData()
+            if (response.success) {
+                Result.success(response.data)
+            } else {
+                Result.failure(Exception(response.message ?: "Unknown error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

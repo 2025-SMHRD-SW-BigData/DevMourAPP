@@ -188,6 +188,24 @@ tools:context=".MainActivity">
 
     </androidx.cardview.widget.CardView>
 
+    <!-- GPS 위치 이동 버튼 -->
+    <ImageButton
+        android:id="@+id/btn_gps_location"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="120dp"
+        android:background="@drawable/circle_button_background"
+        android:backgroundTint="@null"
+        android:elevation="8dp"
+        android:src="@drawable/icon_gps"
+        android:contentDescription="현재 위치로 이동"
+        android:scaleType="centerInside"
+        android:padding="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@android:color/white" />
+
 <!-- 민원제보 버튼 -->
 <androidx.appcompat.widget.AppCompatButton
     android:id="@+id/btn_report"
