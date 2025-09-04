@@ -6,4 +6,10 @@
     </style>
 
     <style name="Theme.DevMour" parent="Base.Theme.DevMour" />
+    
+    <!-- 스플래시 화면용 테마 (액션바 없음) -->
+    <style name="Theme.DevMour.NoActionBar" parent="Base.Theme.DevMour">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
 </resources>

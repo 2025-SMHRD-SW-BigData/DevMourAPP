@@ -38,7 +38,8 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:windowSoftInputMode="stateAlwaysVisible|adjustNothing">
+            android:windowSoftInputMode="stateAlwaysVisible|adjustNothing"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -60,10 +61,17 @@
 
         <activity
             android:name=".ReportActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop" />
+        <activity
+            android:name=".SplashActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DevMour.NoActionBar">
+        </activity>
+
         <activity
             android:name=".LoginActivity"
-            android:exported="true">
+            android:exported="false">
 
             <!-- ✅ 네이버 로그인 콜백 (Redirect URI: naver{ClientID}://authorize) -->
             <intent-filter>

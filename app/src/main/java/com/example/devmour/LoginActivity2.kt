@@ -7,6 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.devmour.auth.LoginManager
+import com.example.devmour.auth.SessionManager
+import com.example.devmour.auth.SignOutHelper
 import com.kakao.sdk.user.UserApiClient
 
 class LoginActivity2 : AppCompatActivity() {
@@ -20,26 +23,31 @@ class LoginActivity2 : AppCompatActivity() {
             insets
         }
 
-        // 로그아웃 버튼 리스너 (카카오 + 네이버)
+        // 로그아웃 버튼 리스너
         val btnLogout = findViewById<android.widget.Button>(R.id.btn_logout)
         btnLogout.setOnClickListener {
-            // 카카오 연결 끊기
-            UserApiClient.instance.unlink { error ->
-                if (error != null) {
-                    Log.e("test", "카카오 연결 끊기 실패", error)
-                } else {
-                    Log.i("test", "카카오 연결 끊기 성공. SDK에서 토큰 삭제 됨")
-                }
+            Log.d("LoginActivity2", "로그아웃 버튼 클릭됨")
+            
+            // 모든 OAuth 제공자에서 로그아웃
+            SignOutHelper.signOutAll(this) {
+                // 모든 OAuth 로그아웃 완료 후
+                LoginManager.logout(this) // 로컬 로그인 상태도 초기화
+                SessionManager.clearAll(this) // 세션 데이터도 초기화
+                
+                Log.d("LoginActivity2", "모든 로그아웃 완료, 로그인 화면으로 이동")
+                
+                // 로그아웃 후 로그인 화면으로 돌아가기
+                val intent = Intent(this, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
             }
-            
-            // 네이버 로그아웃 (임시 비활성화)
-            // NidOAuthLogin.logout()
-            Log.i("test", "네이버 로그아웃 완료")
-            
-            // 로그아웃 후 로그인 화면으로 돌아가기
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // 정상 종료로 마킹
+        SessionManager.markCleanExit(this, true)
     }
 }

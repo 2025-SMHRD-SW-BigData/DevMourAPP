@@ -1,5 +1,6 @@
 package com.example.devmour
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -31,6 +32,8 @@ import com.example.devmour.viewmodel.RoadControlViewModel
 
 import com.example.devmour.data.LocationData
 import com.example.devmour.ui.alert.MainActivityAlert
+import com.example.devmour.auth.LoginManager
+import com.example.devmour.auth.SessionManager
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -67,6 +70,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var btnMain: android.view.View
     private lateinit var btnReport: android.view.View
     
+    // 네비게이션 바 아이콘들
+    private lateinit var ivNotification: android.widget.ImageView
+    private lateinit var ivMain: android.widget.ImageView
+    private lateinit var ivReport: android.widget.ImageView
+
     // 마커 리스트를 저장할 변수
     private val markers = mutableListOf<Marker>()
     private val controlMarkers = mutableListOf<Marker>()
@@ -76,7 +84,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     
     // 안전마커 토글 상태 관리
     private var isSafeMarkersVisible = true
-    
+
     // 광주시 위치 데이터 (하드코딩) - 실제 좌표 사용
     private val gwangjuLocations = listOf(
         // 광산구 (실제 중심 좌표)
@@ -246,12 +254,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnMain = findViewById(R.id.btnMain)
         btnReport = findViewById(R.id.btnReport)
         
+        // 네비게이션 바 아이콘들 초기화
+        ivNotification = findViewById(R.id.ivNotification)
+        ivMain = findViewById(R.id.ivMain)
+        ivReport = findViewById(R.id.ivReport)
+
         // GPS 위치 이동 버튼 초기화
         val btnGpsLocation = findViewById<android.widget.ImageButton>(R.id.btn_gps_location)
         
         // 안전마커 토글 버튼 초기화
         val btnToggleSafeMarkers = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_toggle_safe_markers)
-        
+
         // 알림 버튼 클릭
         btnNotification.setOnClickListener {
             // MainActivityAlert 로 이동
@@ -266,9 +279,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 민원접수 버튼 클릭
         btnReport.setOnClickListener {
-            // ReportActivity로 이동
-            val intent = android.content.Intent(this, ReportActivity::class.java)
-            startActivity(intent)
+            // 로그인 상태 확인
+            if (LoginManager.isLoggedIn(this) && LoginManager.isTokenValid(this)) {
+                // 이미 로그인된 경우 ReportActivity로 바로 이동
+                val intent = android.content.Intent(this, ReportActivity::class.java)
+                startActivity(intent)
+            } else {
+                // 로그인되지 않은 경우 LoginActivity로 이동
+                val intent = android.content.Intent(this, com.example.devmour.LoginActivity::class.java)
+                startActivity(intent)
+            }
         }
         
         // GPS 위치 이동 버튼 클릭
@@ -281,17 +301,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             toggleSafeMarkers()
             updateSafeMarkerToggleButton(btnToggleSafeMarkers)
         }
-        
+
         // 초기 버튼 상태 설정
         updateSafeMarkerToggleButton(btnToggleSafeMarkers)
-        
+
         // 현재 메인화면이므로 메인화면 아이콘 텍스트 색상을 강조
         (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
             if (textView is android.widget.TextView) {
                 textView.setTextColor(Color.parseColor("#2f354f"))
             }
         }
-        
+        // 현재 메인화면이므로 메인화면 아이콘과 텍스트 색상을 강조
+        setNavigationBarState("main")
+
         // 기존 검색 버튼을 위치 검색 기능과 연결
         val searchButton = findViewById<android.widget.Button>(R.id.btnSearch)
         val searchEditText = findViewById<android.widget.EditText>(R.id.etSearch)
@@ -359,6 +381,59 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
     
+    // 네비게이션 바 상태 설정 함수
+    private fun setNavigationBarState(currentPage: String) {
+        // 모든 아이콘을 기본 상태(흰색)로 초기화
+        ivNotification.setImageResource(R.drawable.alarm_w)
+        ivMain.setImageResource(R.drawable.main_w)
+        ivReport.setImageResource(R.drawable.report_w)
+
+        // 모든 텍스트를 기본 색상으로 초기화
+        (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+        (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+        (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+
+        // 현재 페이지에 따라 아이콘과 텍스트 색상 설정
+        when (currentPage) {
+            "notification" -> {
+                ivNotification.setImageResource(R.drawable.alarm_b)
+                (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+            "main" -> {
+                ivMain.setImageResource(R.drawable.main_b)
+                (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+            "report" -> {
+                ivReport.setImageResource(R.drawable.report_b)
+                (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+        }
+    }
+
     // total_score를 기준으로 마커 아이콘을 결정하는 함수
     private fun getMarkerIconByScore(totalScore: Double): Int {
         return when {
@@ -1314,29 +1389,32 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         currentLocationMarker?.map = null
         currentLocationMarker = null
+
+        // 앱이 정상 종료될 때 정리 작업 수행
+        SessionManager.markCleanExit(this, true)
     }
-    
+
     // 안전마커 토글 기능
     private fun toggleSafeMarkers() {
         isSafeMarkersVisible = !isSafeMarkersVisible
         updateSafeMarkersVisibility()
-        
+
 //        val message = if (isSafeMarkersVisible) "안전마커가 표시됩니다" else "안전마커가 숨겨집니다"
 //        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
     }
-    
+
     // 안전마커 표시/숨김 상태 업데이트
     private fun updateSafeMarkersVisibility() {
         roadViewModel.roads.value?.forEachIndexed { index, roadData ->
             val marker = markers.getOrNull(index) ?: return@forEachIndexed
-            
+
             // 안전마커 (totalScore 0.0 ~ 4.0)만 토글 적용
             if (roadData.totalScore >= 0.0 && roadData.totalScore <= 4.0) {
                 marker.map = if (isSafeMarkersVisible) naverMap else null
             }
         }
     }
-    
+
     // 안전마커 토글 버튼 상태 업데이트
     private fun updateSafeMarkerToggleButton(button: androidx.appcompat.widget.AppCompatButton) {
         button.isSelected = isSafeMarkersVisible

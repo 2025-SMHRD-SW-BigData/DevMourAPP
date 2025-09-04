@@ -1,13 +1,19 @@
 package com.example.devmour.ui.alert
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.devmour.MainActivity
+import com.example.devmour.R
+import com.example.devmour.ReportActivity
 import com.example.devmour.alert_fixActivity
 import com.example.devmour.data.db.repository.AppDatabase
 import com.example.devmour.data.db.repository.RoadControlEntity
@@ -31,6 +37,14 @@ class MainActivityAlert : AppCompatActivity() {
     private lateinit var binding: ActivityMainAlertBinding
     private lateinit var adapter: AlertAdapter
     private lateinit var repository: RoadControlRepository
+    
+    // 네비게이션 바 관련 변수들
+    private lateinit var ivNotification: ImageView
+    private lateinit var ivMain: ImageView
+    private lateinit var ivReport: ImageView
+    private lateinit var btnNotification: LinearLayout
+    private lateinit var btnMain: LinearLayout
+    private lateinit var btnReport: LinearLayout
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -41,7 +55,7 @@ class MainActivityAlert : AppCompatActivity() {
         .build()
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.219.54:3003") // Node.js 서버 주소
+        .baseUrl("http://192.168.219.53:3003") // Node.js 서버 주소
         .addConverterFactory(GsonConverterFactory.create())
         .client(client)
         .build()
@@ -68,6 +82,9 @@ class MainActivityAlert : AppCompatActivity() {
             startActivity(intent)
         }
 
+        // 네비게이션 바 초기화
+        initNavigationBar()
+
         lifecycleScope.launch {
             repository.getAllControls().collectLatest { list ->
                 adapter.updateData(list)
@@ -76,6 +93,89 @@ class MainActivityAlert : AppCompatActivity() {
 
         startRealTimePolling()
         startMidnightReset()
+    }
+
+    private fun initNavigationBar() {
+        // 네비게이션 바 요소들 초기화
+        ivNotification = findViewById(R.id.ivNotification)
+        ivMain = findViewById(R.id.ivMain)
+        ivReport = findViewById(R.id.ivReport)
+        btnNotification = findViewById(R.id.btnNotification)
+        btnMain = findViewById(R.id.btnMain)
+        btnReport = findViewById(R.id.btnReport)
+
+        // 네비게이션 바 클릭 리스너 설정
+        btnNotification.setOnClickListener {
+            // 현재 페이지이므로 아무 동작 안함
+        }
+        
+        btnMain.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(intent)
+            finish()
+        }
+        
+        btnReport.setOnClickListener {
+            val intent = Intent(this, ReportActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        // 알림내역 페이지 상태로 설정
+        setNavigationBarState("notification")
+    }
+
+    private fun setNavigationBarState(currentPage: String) {
+        // 모든 아이콘을 기본 상태(흰색)로 설정
+        ivNotification.setImageResource(R.drawable.alarm_w)
+        ivMain.setImageResource(R.drawable.main_w)
+        ivReport.setImageResource(R.drawable.report_w)
+
+        // 모든 텍스트를 기본 색상으로 설정
+        (btnNotification as LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+        (btnMain as LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+        (btnReport as LinearLayout).getChildAt(1)?.let { textView ->
+            if (textView is android.widget.TextView) {
+                textView.setTextColor(Color.parseColor("#666666"))
+            }
+        }
+
+        // 현재 페이지에 따라 아이콘과 텍스트 색상 변경
+        when (currentPage) {
+            "notification" -> {
+                ivNotification.setImageResource(R.drawable.alarm_b)
+                (btnNotification as LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+            "main" -> {
+                ivMain.setImageResource(R.drawable.main_b)
+                (btnMain as LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+            "report" -> {
+                ivReport.setImageResource(R.drawable.report_b)
+                (btnReport as LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+        }
     }
 
     private fun startRealTimePolling() {
