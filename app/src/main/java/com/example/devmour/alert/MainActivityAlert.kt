@@ -1,5 +1,6 @@
 package com.example.devmour.ui.alert
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -7,6 +8,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.devmour.alert_fixActivity
 import com.example.devmour.data.db.repository.AppDatabase
 import com.example.devmour.data.db.repository.RoadControlEntity
 import com.example.devmour.data.RoadControlRepository
@@ -60,6 +62,11 @@ class MainActivityAlert : AppCompatActivity() {
         adapter = AlertAdapter()
         binding.recyclerViewAlerts.layoutManager = LinearLayoutManager(this)
         binding.recyclerViewAlerts.adapter = adapter
+
+        binding.imageView2.setOnClickListener {
+            val intent = Intent(this, alert_fixActivity::class.java)
+            startActivity(intent)
+        }
 
         lifecycleScope.launch {
             repository.getAllControls().collectLatest { list ->

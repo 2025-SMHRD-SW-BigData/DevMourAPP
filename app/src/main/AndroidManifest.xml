@@ -48,6 +48,11 @@
         <activity android:name=".ui.alert.MainActivityAlert"
             tools:ignore="IntentFilterExportedReceiver">
         </activity>
+        <!-- alert_fixActivity        -->
+        <activity
+            android:name="com.example.devmour.alert_fixActivity">
+        </activity>
+
 
         <activity
             android:name=".LoginActivity2"
