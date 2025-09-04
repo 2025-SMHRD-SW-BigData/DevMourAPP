@@ -243,6 +243,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnMain = findViewById(R.id.btnMain)
         btnReport = findViewById(R.id.btnReport)
         
+        // GPS 위치 이동 버튼 초기화
+        val btnGpsLocation = findViewById<android.widget.ImageButton>(R.id.btn_gps_location)
+        
         // 알림 버튼 클릭
         btnNotification.setOnClickListener {
             // MainActivityAlert 로 이동
@@ -260,6 +263,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             // ReportActivity로 이동
             val intent = android.content.Intent(this, ReportActivity::class.java)
             startActivity(intent)
+        }
+        
+        // GPS 위치 이동 버튼 클릭
+        btnGpsLocation.setOnClickListener {
+            moveToCurrentLocation()
         }
         
         // 현재 메인화면이므로 메인화면 아이콘 텍스트 색상을 강조
@@ -510,7 +518,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     // 마커 클릭 이벤트 설정 - 다이얼로그 표시
                     marker.setOnClickListener { overlay ->
-                        val message = "🚧 도로 통제 구역\n\n" +
+                        val message =
                                 "📝 설명: ${roadControlData.controlDesc}\n" +
                                 "🕐 시작: ${roadControlData.controlStTm}\n" +
                                 "🕐 종료: ${roadControlData.controlEdTm ?: "미정"}\n" +
@@ -723,6 +731,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         naverMap.locationTrackingMode = LocationTrackingMode.None
         naverMap.uiSettings.isLocationButtonEnabled = false
         
+        // 줌 컨트롤 활성화
+        naverMap.uiSettings.isZoomControlEnabled = true
+        
         // 테스트 모드에서는 위치 권한 요청하지 않음
         // ActivityCompat.requestPermissions(this, PERMISSION, LOCATION_PERMISSION)
         
@@ -850,6 +861,34 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             marker.map = null
         }
         locationMarkers.clear()
+    }
+    
+    // 현재 위치로 이동
+    private fun moveToCurrentLocation() {
+        if (::naverMap.isInitialized) {
+            // 현재 위치 마커가 있다면 해당 위치로 이동
+            currentLocationMarker?.let { marker ->
+                val cameraPosition = CameraPosition(
+                    marker.position,
+                    16.0,
+                    0.0,
+                    0.0
+                )
+                naverMap.cameraPosition = cameraPosition
+                android.widget.Toast.makeText(this, "현재 위치로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
+            } ?: run {
+                // 현재 위치 마커가 없다면 기본 위치(광주시 중심)로 이동
+                val defaultLocation = LatLng(35.1488, 126.9154)
+                val cameraPosition = CameraPosition(
+                    defaultLocation,
+                    16.0,
+                    0.0,
+                    0.0
+                )
+                naverMap.cameraPosition = cameraPosition
+                android.widget.Toast.makeText(this, "기본 위치로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     // 실시간 위치 업데이트 시작
