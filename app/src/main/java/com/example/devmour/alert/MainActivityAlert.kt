@@ -55,7 +55,7 @@ class MainActivityAlert : AppCompatActivity() {
         .build()
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.219.53:3003") // Node.js 서버 주소
+        .baseUrl("http://192.168.219.250:3003") // Node.js 서버 주소
         .addConverterFactory(GsonConverterFactory.create())
         .client(client)
         .build()
