@@ -37,10 +37,14 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="false"
+            android:exported="true"
             android:windowSoftInputMode="stateAlwaysVisible|adjustNothing"
             android:launchMode="singleTop">
 
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <!-- MainActivityAlert       -->
         <activity android:name=".ui.alert.MainActivityAlert"
@@ -50,7 +54,6 @@
         <activity
             android:name="com.example.devmour.alert_fixActivity">
         </activity>
-
 
         <activity
             android:name=".LoginActivity2"
@@ -65,10 +68,6 @@
             android:exported="true"
             android:theme="@style/Theme.DevMour.NoActionBar">
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <activity
