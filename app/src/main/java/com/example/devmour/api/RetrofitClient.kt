@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     private const val BASE_URL = "http://10.0.2.2:3000/"
+        //"http://10.214.55.49:3000/"
+
         //"http://192.168.219.54:3000/"
 
     

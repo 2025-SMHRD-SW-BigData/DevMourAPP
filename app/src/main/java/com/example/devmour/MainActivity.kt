@@ -818,14 +818,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         naverMap.locationSource = locationSource
         
         // 위치 추적 설정 (테스트 모드)
-        naverMap.locationTrackingMode = LocationTrackingMode.None
+        naverMap.locationTrackingMode = LocationTrackingMode.Follow
         naverMap.uiSettings.isLocationButtonEnabled = false
         
         // 줌 컨트롤 활성화
         naverMap.uiSettings.isZoomControlEnabled = true
         
         // 테스트 모드에서는 위치 권한 요청하지 않음
-        // ActivityCompat.requestPermissions(this, PERMISSION, LOCATION_PERMISSION)
+        ActivityCompat.requestPermissions(this, PERMISSION, LOCATION_PERMISSION)
         
         // 지도가 준비되면 도로 데이터 로드
         Log.d("MainActivity", "도로 데이터 로드 시작")
@@ -1029,15 +1029,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //        val testLatitude = 35.1488
 //        val testLongitude = 126.9154
       //임동오거리
-        val testLatitude =  35.159588
-        val testLongitude = 126.899809
-
-        // 하드코딩된 위치로 마커 업데이트
-        updateLocationMarker(LatLng(testLatitude, testLongitude))
-        Log.d("MainActivity", "테스트 위치로 업데이트: $testLatitude, $testLongitude")
-        
+//        val testLatitude =  35.159588
+//        val testLongitude = 126.899809
+//
+//        // 하드코딩된 위치로 마커 업데이트
+//        updateLocationMarker(LatLng(testLatitude, testLongitude))
+//        Log.d("MainActivity", "테스트 위치로 업데이트: $testLatitude, $testLongitude")
+//
         // 실제 GPS 위치 대신 테스트 위치 사용
-        /*
+
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
             // 마지막 알려진 위치 가져오기
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -1046,14 +1046,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     Log.d("MainActivity", "위치 업데이트: ${it.latitude}, ${it.longitude}")
                 }
             }
-            
+
             // 실시간 위치 업데이트 요청 (더 정확한 위치)
             try {
                 val locationRequest = com.google.android.gms.location.LocationRequest.Builder(10000) // 10초마다
                     .setPriority(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY)
                     .build()
-                
-                fusedLocationClient.requestLocationUpdates(locationRequest, 
+
+                fusedLocationClient.requestLocationUpdates(locationRequest,
                     object : com.google.android.gms.location.LocationCallback() {
                         override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
                             locationResult.lastLocation?.let { location ->
@@ -1066,7 +1066,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 Log.e("MainActivity", "실시간 위치 업데이트 요청 실패: ${e.message}")
             }
         }
-        */
+
     }
     
     // 위치 마커 업데이트
