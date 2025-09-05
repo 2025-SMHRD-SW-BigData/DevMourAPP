@@ -1,6 +1,7 @@
 package com.example.devmour.api
 
 import com.example.devmour.data.ApiResponse
+import com.example.devmour.data.GeocodingResponse
 import com.example.devmour.data.Road
 import com.example.devmour.data.RoadControl
 import com.example.devmour.data.ReportResponse
@@ -35,4 +36,15 @@ interface ApiService {
         @Part cReportFile2: MultipartBody.Part?,
         @Part cReportFile3: MultipartBody.Part?
     ): Response<ReportResponse>
+
+    @GET("req/address")
+    suspend fun searchAddress(
+        @Query("service") service: String = "address",
+        @Query("request") request: String = "getcoord",
+        @Query("crs") crs: String = "epsg:4326",
+        @Query("address") address: String,
+        @Query("format") format: String = "json",
+        @Query("type") type: String = "road",
+        @Query("key") apiKey: String
+    ): GeocodingResponse
 }

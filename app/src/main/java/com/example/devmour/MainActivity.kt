@@ -34,10 +34,13 @@ import com.example.devmour.data.LocationData
 import com.example.devmour.alert.MainActivityAlert
 import com.example.devmour.auth.LoginManager
 import com.example.devmour.auth.SessionManager
+import com.example.devmour.data.AddressSearchResult
+import com.example.devmour.viewmodel.GeocodingViewModel
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
+    private lateinit var geocodingViewModel: GeocodingViewModel
 
     private var LOCATION_PERMISSION = 1004
     private lateinit var naverMap: NaverMap
@@ -229,6 +232,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         roadControlViewModel = ViewModelProvider(this)[RoadControlViewModel::class.java]
         Log.d("MainActivity", "ViewModel 초기화 완료")
 
+    // 기존 ViewModel 초기화 다음에 추가
+        geocodingViewModel = ViewModelProvider(this)[GeocodingViewModel::class.java]
+
         // UI 초기화
         initNavigationBar()
 
@@ -236,6 +242,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         observeRoads()
         observeRoadControls()
         observeFloodData()
+        observeGeocoding()
+
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationSource = FusedLocationSource(this@MainActivity, LOCATION_PERMISSION)
@@ -251,6 +259,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     
     private fun initNavigationBar() {
+
+
+
         btnNotification = findViewById(R.id.btnNotification)
         btnMain = findViewById(R.id.btnMain)
         btnReport = findViewById(R.id.btnReport)
@@ -351,19 +362,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         searchButton?.setOnClickListener {
             val searchQuery = searchEditText.text.toString().trim()
             if (searchQuery.isNotEmpty()) {
-                val searchResults = searchLocations(searchQuery)
-                if (searchResults.isNotEmpty()) {
-                    // 첫 번째 검색 결과로 이동
-                    moveToLocation(searchResults.first())
-                    android.widget.Toast.makeText(this, "${searchResults.first().name}으로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
-                    
+                // API 우선 검색 시작
+                geocodingViewModel.searchAddress(searchQuery)
+//                val searchResults = searchLocations(searchQuery)
+//                if (searchResults.isEmpty()) {
+//                    // 첫 번째 검색 결과로 이동
+//                    moveToLocation(searchResults.first())
+//                    android.widget.Toast.makeText(this, "${searchResults.first().name}으로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
+//
                     // 검색 완료 후 키보드 숨기기
                     val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
                     imm.hideSoftInputFromWindow(searchEditText.windowToken, 0)
                     searchEditText.clearFocus()
-                } else {
-                    android.widget.Toast.makeText(this, "검색 결과가 없습니다", android.widget.Toast.LENGTH_SHORT).show()
-                }
+
             } else {
                 android.widget.Toast.makeText(this, "검색어를 입력해주세요", android.widget.Toast.LENGTH_SHORT).show()
             }
@@ -508,19 +519,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         marker.width = 150
                         marker.height = 150
 
-                        // 위험 마커에 높은 우선순위 부여
-                        marker.zIndex = when {
-                            roadData.totalScore >= 7.1 -> 1000  // 위험 마커 최우선
-                            roadData.totalScore >= 4.1 -> 500   // 경고 마커
-                            else -> 100  // 안전 마커
-                        }
 
-                        // 줌 레벨 제한 완화
-                        marker.minZoom = 5.0   // 매우 낮은 줌 레벨부터 표시
+                        // 수정된 코드
+                        marker.minZoom = 1.0   // 모든 줌 레벨에서 표시
                         marker.maxZoom = 21.0
                         marker.isHideCollidedMarkers = false
                         marker.isHideCollidedSymbols = false
-                        marker.isForceShowIcon = true  // 강제로 아이콘 표시
+                        marker.isForceShowIcon = true
+                        marker.isIconPerspectiveEnabled = false  // 3D 효과 비활성화로 안정성 향상
+
+// 마커별 고유 zIndex 설정 (겹침 방지)
+                        marker.zIndex = when {
+                            roadData.totalScore >= 7.1 -> 1000 + index  // 위험 마커 최우선
+                            roadData.totalScore >= 4.1 -> 500 + index   // 경고 마커
+                            else -> 100 + index  // 안전 마커
+                        }
 
                     } catch (e: Exception) {
                         Log.e("MainActivity", "마커 아이콘 설정 실패: ${e.message}")
@@ -604,7 +617,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     marker.icon = getTransparentOverlay(R.drawable.marker_control)
                     marker.width = 150
                     marker.height = 150
-                    
+
+                    // 다음 코드들 추가
+                    marker.minZoom = 1.0
+                    marker.maxZoom = 21.0
+                    marker.isHideCollidedMarkers = false
+                    marker.isHideCollidedSymbols = false
+                    marker.isForceShowIcon = true
+                    marker.isIconPerspectiveEnabled = false
+                    marker.zIndex = 2000 + index  // 통제 마커는 가장 높은 우선순위
+
                     marker.tag = "CONTROL_${roadControlData.controlIdx}"
 
                     // 마커 클릭 이벤트 설정 - 다이얼로그 표시
@@ -662,6 +684,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         roadControlViewModel.isLoading.observe(this) { isLoading ->
             Log.d("MainActivity", "도로 통제 로딩 상태: $isLoading")
+
+
         }
     }
 
@@ -713,9 +737,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     marker.map = naverMap
 
                     // 침수 마커 아이콘 설정
-                    marker.icon = getTransparentOverlay(R.drawable.marker_flood)
+                    marker.icon = getTransparentOverlay(R.drawable.marker_blue)
                     marker.width = 150
                     marker.height = 150
+                    
+                    // 침수 마커가 공사통제 마커보다 앞에 표시되도록 zIndex 설정
+                    marker.zIndex = 3000 + index  // 침수 마커는 가장 높은 우선순위
                     
                     marker.tag = "FLOOD_${floodData.controlIdx}"
 
@@ -768,6 +795,98 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun observeGeocoding() {
+        Log.d("MainActivity", "=== Geocoding Observer 설정 시작 ===")
+
+        geocodingViewModel.searchResult.observe(this) { searchResult ->
+            searchResult?.let { result ->
+                Log.d("MainActivity", "주소 검색 결과: ${result.address} -> ${result.latitude}, ${result.longitude}")
+
+                // 검색된 위치로 이동
+                moveToSearchedLocation(result)
+
+                android.widget.Toast.makeText(this,
+                    "${result.address}로 이동했습니다",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        geocodingViewModel.error.observe(this) { errorMessage ->
+            errorMessage?.let {
+                Log.e("MainActivity", "API 주소 검색 실패: $it")
+
+                // API 검색 실패 시 로컬 검색으로 fallback
+                performLocalSearch()
+            }
+        }
+
+        geocodingViewModel.isLoading.observe(this) { isLoading ->
+            Log.d("MainActivity", "주소 검색 로딩 상태: $isLoading")
+            // 로딩 인디케이터 표시/숨김 처리 가능
+        }
+    }
+    // 로컬 검색을 수행하는 별도 함수 추가
+    private fun performLocalSearch() {
+        val searchEditText = findViewById<android.widget.EditText>(R.id.etSearch)
+        val searchQuery = searchEditText?.text.toString().trim()
+
+        if (searchQuery.isNotEmpty()) {
+            val localResults = searchLocations(searchQuery)
+            if (localResults.isNotEmpty()) {
+                // 로컬 검색 결과가 있으면 첫 번째 결과로 이동
+                moveToLocation(localResults.first())
+                android.widget.Toast.makeText(this,
+                    "로컬 검색: ${localResults.first().name}으로 이동했습니다",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                // 로컬 검색 결과도 없으면 에러 메시지
+                android.widget.Toast.makeText(this,
+                    "검색 결과가 없습니다",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun moveToSearchedLocation(searchResult: AddressSearchResult) {
+        // 기존 위치 마커들 제거
+        clearLocationMarkers()
+
+        // 새로운 위치 마커 추가
+        val marker = com.naver.maps.map.overlay.Marker()
+        marker.position = com.naver.maps.geometry.LatLng(searchResult.latitude, searchResult.longitude)
+        marker.map = naverMap
+
+        // 검색된 주소 마커 스타일 설정
+        marker.icon = com.naver.maps.map.util.MarkerIcons.RED
+        marker.iconTintColor = android.graphics.Color.RED
+        marker.width = 100
+        marker.height = 100
+        marker.captionText = searchResult.address
+
+        marker.tag = "SEARCHED_LOCATION"
+
+        // 마커 클릭 이벤트
+        marker.setOnClickListener { _ ->
+            val message = "검색된 주소\n${searchResult.address}\n\n위치: ${searchResult.latitude}, ${searchResult.longitude}"
+            android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_LONG).show()
+            true
+        }
+
+        locationMarkers.add(marker)
+
+        // 카메라를 해당 위치로 이동
+        val cameraPosition = com.naver.maps.map.CameraPosition(
+            com.naver.maps.geometry.LatLng(searchResult.latitude, searchResult.longitude),
+            16.0,
+            0.0,
+            0.0
+        )
+        naverMap.cameraPosition = cameraPosition
+    }
+
     private fun checkMarkerStatus() {
         Log.d("MainActivity", "=== 마커 상태 확인 ===")
         Log.d("MainActivity", "도로 마커: ${markers.size}개")
@@ -788,6 +907,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.d("MainActivity", "지도 준비 완료")
         naverMap = map
 
+// 기존 onMapReady 함수 내부에 추가
+        naverMap.uiSettings.isZoomControlEnabled = true
+
+// 마커 렌더링 최적화 설정 추가
+        naverMap.setLayerGroupEnabled(com.naver.maps.map.NaverMap.LAYER_GROUP_BUILDING, true)
+        naverMap.mapType = com.naver.maps.map.NaverMap.MapType.Basic
+
+// 마커 클러스터링 비활성화 (모든 마커 개별 표시)
+        naverMap.uiSettings.isCompassEnabled = false
 
         // 잠시 기다린 후 지도 상태 확인
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
@@ -796,17 +924,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }, 3000)
 
         // 카메라 설정 (테스트 위치로 설정)
-        val testLatitude = 35.1488
-        val testLongitude = 126.9154
-        val cameraPosition = CameraPosition(
-            LatLng(testLatitude, testLongitude),
-            16.0,
-            20.0,
-            0.0
-        )
-        naverMap.cameraPosition = cameraPosition
-        Log.d("MainActivity", "테스트 위치로 카메라 설정 완료: $testLatitude, $testLongitude")
-        
+//        val testLatitude = 35.1488
+//        val testLongitude = 126.9154
+//        val cameraPosition = CameraPosition(
+//            LatLng(testLatitude, testLongitude),
+//            16.0,
+//            20.0,
+//            0.0
+//        )
+//        naverMap.cameraPosition = cameraPosition
+//        Log.d("MainActivity", "테스트 위치로 카메라 설정 완료: $testLatitude, $testLongitude")
+//
         // 지도 클릭 이벤트 비활성화 (마커 추가/삭제 기능 제거)
         naverMap.setOnMapClickListener { point, coord ->
             Log.d("MainActivity", "지도 클릭: ${coord.latitude}, ${coord.longitude}")
@@ -1084,20 +1212,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                  this.position = position
                  this.map = naverMap
                  this.tag = "CURRENT_LOCATION"
-                 
-                 // 위험 구역 여부에 따라 마커 색상 설정
-                 if (isInDangerZone) {
-                     // 위험 구역일 때는 마커를 표시하지 않고 파동 효과만 표시
-                     this.map = null
-                     Log.d("MainActivity", "현재 위치 마커: 숨김 (위험 구역) - 파동 효과만 표시")
-                 } else {
-                     this.icon = MarkerIcons.BLUE
-                     this.iconTintColor = Color.BLUE
-                     this.width = 80
-                     this.height = 80
-                     this.captionText = "현재 위치"
-                     Log.d("MainActivity", "현재 위치 마커: 파란색 (안전 구역)")
-                 }
+
+
+                 // 추가할 설정들
+                 this.minZoom = 1.0
+                 this.maxZoom = 21.0
+                 this.isHideCollidedMarkers = false
+                 this.isHideCollidedSymbols = false
+                 this.isForceShowIcon = true
+                 this.isIconPerspectiveEnabled = false
+                 this.zIndex = 3000  // 현재 위치는 최우선
+
+
+                 // 현재 위치 마커를 항상 숨김 (파동 효과만 표시)
+                 this.map = null
+                 Log.d("MainActivity", "현재 위치 마커: 숨김 - 파동 효과만 표시")
              }
             
             Log.d("MainActivity", "위치 추적 시작: ${position}")
@@ -1108,25 +1237,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             // 기존 마커 위치 업데이트
             currentLocationMarker?.position = position
             
-                         // 위험 구역 상태가 변경되었으면 마커 표시/숨김과 애니메이션 재시작
-             if (isInDangerZone != wasInDangerZone) {
+                         // 현재 위치 마커는 항상 숨김 (파동 효과만 표시)
                  currentLocationMarker?.let { marker ->
-                     if (isInDangerZone) {
-                         // 위험 구역일 때는 마커를 숨기고 파동 효과만 표시
-                         marker.map = null
-                         Log.d("MainActivity", "현재 위치 마커 숨김: 위험 구역 - 파동 효과만 표시")
-                     } else {
-                         // 안전 구역일 때는 마커를 표시
-                         marker.map = naverMap
-                         marker.icon = MarkerIcons.BLUE
-                         marker.iconTintColor = Color.BLUE
-                         marker.captionText = "현재 위치 (안전 구역)"
-                         Log.d("MainActivity", "현재 위치 마커 표시: 파란색 (안전 구역)")
-                     }
+                     marker.map = null
+                     Log.d("MainActivity", "현재 위치 마커: 항상 숨김 - 파동 효과만 표시")
                  }
                  
                  startPulsingAnimation()
-             }
             
             Log.d("MainActivity", "위치 업데이트됨: $position")
         }
