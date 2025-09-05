@@ -81,7 +81,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private val floodMarkers = mutableListOf<Marker>() // 침수 마커
     private val locationMarkers = mutableListOf<Marker>() // 위치 검색 마커
     private val overlayImageCache = mutableMapOf<Int, OverlayImage>()
-    
+
+
     // 안전마커 토글 상태 관리
     private var isSafeMarkersVisible = true
 
@@ -459,18 +460,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         roadViewModel.roads.observe(this) { roadList ->
             Log.d("MainActivity", "=== 도로 Observer 시작 ===")
-            Log.d("MainActivity", "현재 통제 마커 수: ${controlMarkers.size}")
-            Log.d("MainActivity", "받은 도로 리스트: ${roadList?.size}개")
 
-            // null 체크 추가
-            if (roadList == null) {
-                Log.w("MainActivity", "도로 리스트가 null임 - 처리중단")
+            // null 체크 및 초기화 확인
+            if (roadList == null || !::naverMap.isInitialized) {
+                Log.w("MainActivity", "조건 미충족 - 처리중단")
                 return@observe
             }
 
-            // naverMap 초기화 확인
-            if (!::naverMap.isInitialized) {
-                Log.w("MainActivity", "naverMap이 아직 초기화되지 않음 - 처리 중단")
+            // 도로 리스트가 비어있는지 확인
+            if (roadList.isEmpty()) {
+                Log.w("MainActivity", "받은 도로 리스트가 비어있음!")
                 return@observe
             }
 
@@ -510,11 +509,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         marker.icon = getTransparentOverlay(iconResId)
                         marker.width = 150
                         marker.height = 150
-                        
-//                        // 마커 툴팁에 등급과 점수 정보 표시
-//                        val grade = getGradeByScore(roadData.totalScore)
-//                        marker.captionText = "${grade} 등급 (점수: ${roadData.totalScore})"
-                        
+
+                        // 위험 마커에 높은 우선순위 부여
+                        marker.zIndex = when {
+                            roadData.totalScore >= 7.1 -> 1000  // 위험 마커 최우선
+                            roadData.totalScore >= 4.1 -> 500   // 경고 마커
+                            else -> 100  // 안전 마커
+                        }
+
+                        // 줌 레벨 제한 완화
+                        marker.minZoom = 5.0   // 매우 낮은 줌 레벨부터 표시
+                        marker.maxZoom = 21.0
+                        marker.isHideCollidedMarkers = false
+                        marker.isHideCollidedSymbols = false
+                        marker.isForceShowIcon = true  // 강제로 아이콘 표시
+
                     } catch (e: Exception) {
                         Log.e("MainActivity", "마커 아이콘 설정 실패: ${e.message}")
                         // 실패 시 기본 아이콘 사용
@@ -555,19 +564,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.d("MainActivity", "현재 도로 마커 수: ${markers.size}")
             Log.d("MainActivity", "받은 도로 통제 리스트: ${roadControlList?.size}개")
 
-            // null 체크 추가
-            if (roadControlList == null) {
+            // null 체크 및 초기화 확인
+            if (roadControlList == null || !::naverMap.isInitialized) {
                 Log.w("MainActivity", "도로 통제 리스트가 null임 - 처리중단")
                 return@observe
             }
 
-            // naverMap 초기화 확인
-            if (!::naverMap.isInitialized) {
-                Log.w("MainActivity", "naverMap이 아직 초기화되지 않음 - 처리 중단")
-                return@observe
-            }
-
-            Log.d("MainActivity", "모든 조건 통과 - 도로 통제 마커 처리 시작")
 
             // 기존 통제 마커들 제거
             Log.d("MainActivity", "기존 통제 마커 제거: ${controlMarkers.size}개")
@@ -672,17 +674,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.d("MainActivity", "현재 침수 마커 수: ${floodMarkers.size}")
             Log.d("MainActivity", "받은 침수 리스트: ${floodList?.size}개")
 
-            // null 체크 추가
-            if (floodList == null) {
+            // null 체크 naverMap 초기화 확인
+            if (floodList == null || !::naverMap.isInitialized ) {
                 Log.w("MainActivity", "침수 리스트가 null임 - 처리중단")
                 return@observe
             }
 
-            // naverMap 초기화 확인
-            if (!::naverMap.isInitialized) {
-                Log.w("MainActivity", "naverMap이 아직 초기화되지 않음 - 처리 중단")
-                return@observe
-            }
 
             Log.d("MainActivity", "모든 조건 통과 - 침수 마커 처리 시작")
 
