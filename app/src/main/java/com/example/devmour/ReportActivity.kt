@@ -39,6 +39,7 @@ import android.graphics.Color
 import com.example.devmour.data.LocationData
 import com.example.devmour.auth.LoginManager
 import com.example.devmour.auth.SessionManager
+import com.example.devmour.alert.MainActivityAlert
 
 class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     
@@ -328,8 +329,9 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 하단 네비게이션 바
         findViewById<LinearLayout>(R.id.btnNotification).setOnClickListener {
-            // 알림 기능 (추후 구현)
-            Toast.makeText(this, "알림 기능은 준비 중입니다", Toast.LENGTH_SHORT).show()
+            // 알림내역 페이지로 이동
+            val intent = Intent(this, MainActivityAlert::class.java)
+            startActivity(intent)
         }
         
         findViewById<LinearLayout>(R.id.btnMain).setOnClickListener {

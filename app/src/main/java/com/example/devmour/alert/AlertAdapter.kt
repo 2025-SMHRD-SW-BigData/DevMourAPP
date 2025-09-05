@@ -1,4 +1,4 @@
-package com.example.devmour.ui.alert
+package com.example.devmour.alert
 
 import android.view.LayoutInflater
 import android.view.View

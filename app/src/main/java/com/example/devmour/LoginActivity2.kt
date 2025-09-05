@@ -16,33 +16,15 @@ class LoginActivity2 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_login2)
+        setContentView(R.layout.activity_login)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // 로그아웃 버튼 리스너
-        val btnLogout = findViewById<android.widget.Button>(R.id.btn_logout)
-        btnLogout.setOnClickListener {
-            Log.d("LoginActivity2", "로그아웃 버튼 클릭됨")
-            
-            // 모든 OAuth 제공자에서 로그아웃
-            SignOutHelper.signOutAll(this) {
-                // 모든 OAuth 로그아웃 완료 후
-                LoginManager.logout(this) // 로컬 로그인 상태도 초기화
-                SessionManager.clearAll(this) // 세션 데이터도 초기화
-                
-                Log.d("LoginActivity2", "모든 로그아웃 완료, 로그인 화면으로 이동")
-                
-                // 로그아웃 후 로그인 화면으로 돌아가기
-                val intent = Intent(this, LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
-                finish()
-            }
-        }
+        // LoginActivity2는 로그인 화면과 동일한 레이아웃을 사용
+        // 로그아웃 기능은 필요시 다른 방법으로 구현
     }
 
     override fun onDestroy() {

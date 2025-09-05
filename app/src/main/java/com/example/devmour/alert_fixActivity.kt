@@ -9,7 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.devmour.ui.alert.MainActivityAlert
+import com.example.devmour.alert.MainActivityAlert
 
 class alert_fixActivity : AppCompatActivity() {
     
