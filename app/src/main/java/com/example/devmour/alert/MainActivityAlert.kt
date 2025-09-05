@@ -1,4 +1,4 @@
-package com.example.devmour.ui.alert
+package com.example.devmour.alert
 
 import android.content.Intent
 import android.graphics.Color
@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.devmour.MainActivity
 import com.example.devmour.R
 import com.example.devmour.ReportActivity
+import com.example.devmour.alert.AlertAdapter
 import com.example.devmour.alert_fixActivity
 import com.example.devmour.data.db.repository.AppDatabase
 import com.example.devmour.data.db.repository.RoadControlEntity

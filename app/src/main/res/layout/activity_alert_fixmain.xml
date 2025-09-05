@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
 
     <!-- 메인 화면 컨테이너 -->
 
@@ -12,17 +13,21 @@
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/bottom_navigation"
+        android:layout_above="@id/navigationBar"
         android:layout_marginBottom="1dp">
 
         <TextView
             android:id="@+id/textView3"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="150dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginLeft="0dp"
             android:layout_marginTop="15dp"
+            android:gravity="center"
             android:text="환경설정"
-            android:textSize="25sp" />
+            android:textColor="#2f354f"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
         <View
             android:layout_width="match_parent"
@@ -31,14 +36,24 @@
             android:layout_marginTop="70dp"
             android:background="#A9A9A9" />
 
-        <Switch
-            android:id="@+id/switch1"
-            android:layout_width="378dp"
+        <TextView
+            android:id="@+id/textView_alarm"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginTop="100dp"
-            android:text="알림설정"
+            android:text="알림 설정"
             android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1E2A44" />
+
+        <Switch
+            android:id="@+id/switch1"
+            android:layout_width="370dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="100dp"
+            android:layout_marginRight="0dp"
             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         <ImageView
@@ -47,17 +62,26 @@
             android:layout_height="40dp"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="15dp"
-            app:srcCompat="@drawable/ic_arrow_back" />
+            app:srcCompat="@drawable/backward" />
 
-        <Switch
-            android:id="@+id/switch2"
-            android:layout_width="379dp"
+        <TextView
+            android:id="@+id/textView_location"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginTop="300dp"
-            android:layout_marginRight="40dp"
             android:text="위치 정보 동의"
             android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1E2A44" />
+
+        <Switch
+            android:id="@+id/switch2"
+            android:layout_width="373dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="300dp"
+            android:layout_marginRight="0dp"
             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         <TextView
@@ -67,7 +91,7 @@
             android:layout_marginLeft="20dp"
             android:layout_marginTop="130dp"
             android:text="알림설정 해제시 도로 통제, 침수, 공사중 등 \n안전 알림이 수신되지 않습니다."
-            android:textColor="#A9A9A9"
+            android:textColor="#999999"
             android:textSize="10sp" />
 
         <TextView
@@ -77,48 +101,161 @@
             android:layout_marginLeft="20dp"
             android:layout_marginTop="330dp"
             android:text="위치 정보에 동의 하시지 않으실 경우\n 민원 신고 하시는데에 어려움을 겪으실 수 있습니다."
-            android:textColor="#A9A9A9"
+            android:textColor="#999999"
             android:textSize="10sp" />
 
         <Switch
             android:id="@+id/switch3"
-            android:layout_width="366dp"
+            android:layout_width="156dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
             android:layout_marginTop="180dp"
+            android:layout_marginRight="30dp"
             android:text="도로 통제"
+            android:textColor="#1E2A44"
+            android:textSize="18sp"
+            android:textStyle="bold"
             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         <Switch
             android:id="@+id/switch4"
-            android:layout_width="366dp"
+            android:layout_width="156dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
             android:layout_marginTop="210dp"
+            android:layout_marginRight="30dp"
             android:text="침수"
+            android:textColor="#1E2A44"
+            android:textSize="18sp"
+            android:textStyle="bold"
             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         <Switch
             android:id="@+id/switch5"
-            android:layout_width="366dp"
+            android:layout_width="156dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
             android:layout_marginTop="240dp"
+            android:layout_marginRight="30dp"
             android:text="공사중"
+            android:textColor="#1E2A44"
+            android:textSize="18sp"
+            android:textStyle="bold"
             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
 
     </FrameLayout>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_navigation"
+    <!-- 하단 네비게이션 바 -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/navigationBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="120dp"
         android:layout_alignParentBottom="true"
-        app:menu="@menu/bottom_nav_menu"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color"
-        app:labelVisibilityMode="labeled"
-        android:background="?android:attr/windowBackground" />
+        android:layout_marginBottom="0dp"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="@android:color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingTop="12dp"
+            android:paddingBottom="48dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <!-- 알림내역 -->
+            <LinearLayout
+                android:id="@+id/btnNotification"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:padding="8dp">
+
+                <ImageView
+                    android:id="@+id/ivNotification"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/alarm_b"
+                    android:contentDescription="알림" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="알림내역"
+                    android:textSize="12sp"
+                    android:textColor="#2f354f" />
+            </LinearLayout>
+
+            <!-- 메인화면 -->
+            <LinearLayout
+                android:id="@+id/btnMain"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:padding="8dp">
+
+                <ImageView
+                    android:id="@+id/ivMain"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/main_w"
+                    android:contentDescription="메인" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="메인화면"
+                    android:textSize="12sp"
+                    android:textColor="#666666" />
+            </LinearLayout>
+
+            <!-- 민원접수 -->
+            <LinearLayout
+                android:id="@+id/btnReport"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:padding="8dp">
+
+                <ImageView
+                    android:id="@+id/ivReport"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/report_w"
+                    android:contentDescription="민원접수" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="민원접수"
+                    android:textSize="12sp"
+                    android:textColor="#666666" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
 
 </RelativeLayout>

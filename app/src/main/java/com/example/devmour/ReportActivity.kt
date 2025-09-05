@@ -39,13 +39,13 @@ import android.graphics.Color
 import com.example.devmour.data.LocationData
 import com.example.devmour.auth.LoginManager
 import com.example.devmour.auth.SessionManager
+import com.example.devmour.alert.MainActivityAlert
 
 class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     
     private lateinit var etAddress: EditText
     private lateinit var btnSearch: Button
     private lateinit var btnFlood: com.google.android.material.card.MaterialCardView
-    private lateinit var btnIce: com.google.android.material.card.MaterialCardView
     private lateinit var btnBreak: com.google.android.material.card.MaterialCardView
     // private lateinit var btnEtc: com.google.android.material.card.MaterialCardView
     private lateinit var btnCamera: com.google.android.material.card.MaterialCardView
@@ -320,7 +320,6 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         etAddress = findViewById(R.id.et_address)
         btnSearch = findViewById(R.id.btn_search)
         btnFlood = findViewById(R.id.btn_flood)
-        btnIce = findViewById(R.id.btn_ice)
         btnBreak = findViewById(R.id.btn_break)
         // btnEtc = findViewById(R.id.btn_etc)
         btnCamera = findViewById(R.id.btn_camera)
@@ -330,8 +329,9 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 하단 네비게이션 바
         findViewById<LinearLayout>(R.id.btnNotification).setOnClickListener {
-            // 알림 기능 (추후 구현)
-            Toast.makeText(this, "알림 기능은 준비 중입니다", Toast.LENGTH_SHORT).show()
+            // 알림내역 페이지로 이동
+            val intent = Intent(this, MainActivityAlert::class.java)
+            startActivity(intent)
         }
         
         findViewById<LinearLayout>(R.id.btnMain).setOnClickListener {
@@ -368,7 +368,6 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 카테고리 버튼들
         btnFlood.setOnClickListener { selectCategory("도로 침수", btnFlood) }
-        btnIce.setOnClickListener { selectCategory("도로 빙결", btnIce) }
         btnBreak.setOnClickListener { selectCategory("도로 파손", btnBreak) }
         // btnEtc.setOnClickListener { selectCategory("기타 사항", btnEtc) }
         
@@ -414,7 +413,7 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     
     private fun resetCategoryButtons() {
-        val buttons = listOf(btnFlood, btnIce, btnBreak)
+        val buttons = listOf(btnFlood, btnBreak)
         buttons.forEach { button ->
             button.setCardBackgroundColor(ContextCompat.getColor(this, android.R.color.white))
         }

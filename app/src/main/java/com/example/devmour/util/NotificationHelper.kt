@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.example.devmour.ui.alert.MainActivityAlert
+import com.example.devmour.alert.MainActivityAlert
 import com.example.devmour.R
 import com.example.devmour.network.ControlData
 

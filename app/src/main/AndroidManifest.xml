@@ -47,7 +47,7 @@
             </intent-filter>
         </activity>
         <!-- MainActivityAlert       -->
-        <activity android:name=".ui.alert.MainActivityAlert"
+        <activity android:name=".alert.MainActivityAlert"
             tools:ignore="IntentFilterExportedReceiver">
         </activity>
         <!-- alert_fixActivity        -->
@@ -66,8 +66,13 @@
             android:launchMode="singleTop" />
         <activity
             android:name=".SplashActivity"
-            android:exported="false"
+            android:exported="true"
             android:theme="@style/Theme.DevMour.NoActionBar">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <activity

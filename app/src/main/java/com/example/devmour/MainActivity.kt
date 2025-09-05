@@ -31,7 +31,7 @@ import com.example.devmour.viewmodel.RoadViewModel
 import com.example.devmour.viewmodel.RoadControlViewModel
 
 import com.example.devmour.data.LocationData
-import com.example.devmour.ui.alert.MainActivityAlert
+import com.example.devmour.alert.MainActivityAlert
 import com.example.devmour.auth.LoginManager
 import com.example.devmour.auth.SessionManager
 
@@ -280,15 +280,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 민원접수 버튼 클릭
         btnReport.setOnClickListener {
-            // 로그인 상태 확인
-            if (LoginManager.isLoggedIn(this) && LoginManager.isTokenValid(this)) {
-                // 이미 로그인된 경우 ReportActivity로 바로 이동
-                val intent = android.content.Intent(this, ReportActivity::class.java)
+            try {
+                android.util.Log.d("MainActivity", "민원제보 버튼 클릭됨 - LoginActivity로 이동")
+                val intent = android.content.Intent(this, LoginActivity::class.java)
                 startActivity(intent)
-            } else {
-                // 로그인되지 않은 경우 LoginActivity로 이동
-                val intent = android.content.Intent(this, com.example.devmour.LoginActivity::class.java)
-                startActivity(intent)
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "민원제보 버튼 클릭 오류: ${e.message}", e)
+                android.widget.Toast.makeText(this, "오류가 발생했습니다: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
         
@@ -571,6 +569,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
 
+
             // 기존 통제 마커들 제거
             Log.d("MainActivity", "기존 통제 마커 제거: ${controlMarkers.size}개")
             controlMarkers.forEach { marker ->
@@ -679,6 +678,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 Log.w("MainActivity", "침수 리스트가 null임 - 처리중단")
                 return@observe
             }
+
 
 
             Log.d("MainActivity", "모든 조건 통과 - 침수 마커 처리 시작")

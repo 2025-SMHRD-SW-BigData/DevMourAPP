@@ -31,19 +31,9 @@ object SessionManager {
         val lastExitTime = prefs.getLong(KEY_LAST_EXIT_TIME, 0L)
         val currentTime = System.currentTimeMillis()
         
-        // 비정상 종료 시에는 무조건 강제 로그아웃
-        if (!wasCleanExit) {
-            Log.d("SessionManager", "비정상 종료 감지 - 강제 로그아웃 실행")
-            return true
-        }
-        
-        // 정상 종료 시에는 3초 후 강제 로그아웃
-        val timeThreshold = 3 * 1000L // 3초
-        val shouldForce = (currentTime - lastExitTime) >= timeThreshold
-        
-        Log.d("SessionManager", "강제 로그아웃 필요 여부: $shouldForce (clean=$wasCleanExit, timeDiff=${currentTime - lastExitTime}ms)")
-        
-        return shouldForce
+        // 앱 종료 시에는 정상/비정상 상관없이 무조건 강제 로그아웃
+        Log.d("SessionManager", "앱 종료 감지 - 강제 로그아웃 실행 (clean=$wasCleanExit, timeDiff=${currentTime - lastExitTime}ms)")
+        return true
     }
     
     // 모든 세션 데이터 초기화
