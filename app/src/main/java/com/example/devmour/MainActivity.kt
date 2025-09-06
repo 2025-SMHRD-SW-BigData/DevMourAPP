@@ -7,7 +7,9 @@ import android.graphics.BitmapFactory
 import java.util.ArrayDeque
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -995,7 +997,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 } else {
                     naverMap.locationTrackingMode = LocationTrackingMode.Follow
                     startLocationUpdates()
-                    android.widget.Toast.makeText(this, "실시간 위치 추적이 시작되었습니다", android.widget.Toast.LENGTH_SHORT).show()
+//                    android.widget.Toast.makeText(this, "실시간 위치 추적이 시작되었습니다", android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -1066,8 +1068,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             0.0
         )
         naverMap.cameraPosition = cameraPosition
-        
-        android.widget.Toast.makeText(this, "${location.name}으로 이동했습니다", android.widget.Toast.LENGTH_SHORT).show()
+        val toast = Toast.makeText(this, "${location.name}으로 이동했습니다", android.widget.Toast.LENGTH_SHORT)
+
+        toast.setGravity(Gravity.TOP, 0,100);
+        toast.show()
     }
 
     // 위치 마커들 제거

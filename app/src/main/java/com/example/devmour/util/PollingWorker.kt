@@ -29,6 +29,8 @@ class PollingWorker(appContext: Context, params: WorkerParameters) :
 
     private val retrofit = Retrofit.Builder()
         .baseUrl("http://192.168.219.54:3003") // Node.js 서버 주소
+
+    //"http://175.45.194.114:3001" -> 배포서버
         .addConverterFactory(GsonConverterFactory.create())
         .client(client)
         .build()
