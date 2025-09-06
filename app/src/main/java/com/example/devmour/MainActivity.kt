@@ -81,11 +81,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var ivMain: android.widget.ImageView
     private lateinit var ivReport: android.widget.ImageView
 
-    // 네비게이션 바 아이콘들
-    private lateinit var ivNotification: android.widget.ImageView
-    private lateinit var ivMain: android.widget.ImageView
-    private lateinit var ivReport: android.widget.ImageView
-
     // 마커 리스트를 저장할 변수
     private val markers = mutableListOf<Marker>()
     private val controlMarkers = mutableListOf<Marker>()
@@ -1559,79 +1554,5 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         button.text = if (isSafeMarkersVisible) "안전마커 숨기기" else "안전마커 보이기"
     }
 
-    private fun setNavigationBarState(currentPage: String) {
-        // 네비게이션 바 아이콘과 텍스트 색상 설정
-        when (currentPage) {
-            "main" -> {
-                // 메인화면 활성화
-                ivMain.setImageResource(R.drawable.main_b)
-                ivReport.setImageResource(R.drawable.report_w)
-                ivNotification.setImageResource(R.drawable.alarm_w)
-
-                // 텍스트 색상 설정
-                (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#2f354f"))
-                    }
-                }
-                (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#999999"))
-                    }
-                }
-                (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#999999"))
-                    }
-                }
-            }
-            "report" -> {
-                // 민원접수 활성화
-                ivMain.setImageResource(R.drawable.main_w)
-                ivReport.setImageResource(R.drawable.report_b)
-                ivNotification.setImageResource(R.drawable.alarm_w)
-
-                // 텍스트 색상 설정
-                (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#999999"))
-                    }
-                }
-                (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#2f354f"))
-                    }
-                }
-                (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#999999"))
-                    }
-                }
-            }
-            "notification" -> {
-                // 알림내역 활성화
-                ivMain.setImageResource(R.drawable.main_w)
-                ivReport.setImageResource(R.drawable.report_w)
-                ivNotification.setImageResource(R.drawable.alarm_b)
-
-                // 텍스트 색상 설정
-                (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#999999"))
-                    }
-                }
-                (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#999999"))
-                    }
-                }
-                (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
-                    if (textView is android.widget.TextView) {
-                        textView.setTextColor(Color.parseColor("#2f354f"))
-                    }
-                }
-            }
-        }
-    }
 }
 

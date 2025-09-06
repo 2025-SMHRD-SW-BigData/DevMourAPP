@@ -87,8 +87,22 @@ class MainActivityAlert : AppCompatActivity() {
         // 네비게이션 바 초기화
         initNavigationBar()
 
+        // 테스트용 데이터 추가
         lifecycleScope.launch {
+            val testData = RoadControlEntity(
+                control_desc = "도로 침수",
+                control_addr = "서울시 강남구 테헤란로 123",
+                control_st_tm = System.currentTimeMillis(),
+                control_type = null,
+                completed = null
+            )
+            repository.insert(testData)
+            
             repository.getAllControls().collectLatest { list ->
+                Log.d("MainActivityAlert", "데이터베이스에서 가져온 데이터 개수: ${list.size}")
+                if (list.isNotEmpty()) {
+                    Log.d("MainActivityAlert", "첫 번째 데이터: ${list[0].control_desc}, ${list[0].control_addr}")
+                }
                 adapter.updateData(list)
             }
         }

@@ -46,6 +46,7 @@ class AlertAdapter(
     override fun getItemCount(): Int = items.size
 
     fun updateData(newItems: List<RoadControlEntity>) {
+        android.util.Log.d("AlertAdapter", "updateData 호출됨. 데이터 개수: ${newItems.size}")
         items = newItems
         notifyDataSetChanged()
     }

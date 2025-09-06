@@ -50,7 +50,7 @@ class SplashActivity : AppCompatActivity() {
                 </style>
             </head>
             <body>
-                <img src="file:///android_asset/loading.gif" />
+                <img src="file:///android_asset/roro.gif" />
             </body>
             </html>
         """.trimIndent()
