@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
+    xmlns:tools="http://schemas.android.com/tools"
+    android:versionCode="1"
+    android:versionName="1.0">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -82,9 +83,6 @@
                 <data android:host="authorize"
                     android:scheme= "naver2zTcXI0_lYuvpxRezRfa" /> <!-- 예: naverabcd1234 -->
 
-                <data
-                    android:host="authorize"
-                    android:scheme="naver2zTcXI0_lYuvpxRezRfa" /> <!-- 예: naverabcd1234 -->
 
             </intent-filter>
         </activity> <!-- 카카오 로그인 콜백 액티비티 -->

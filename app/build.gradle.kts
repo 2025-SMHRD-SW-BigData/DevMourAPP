@@ -46,6 +46,11 @@ android {
 
 dependencies {
 
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.core:core-ktx:1.10.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.activity:activity-ktx:1.7.2")
+
     // 네이버 지도 SDK
     implementation("com.naver.maps:map-sdk:3.22.1")
 

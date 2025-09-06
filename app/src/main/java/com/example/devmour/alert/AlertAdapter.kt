@@ -35,7 +35,7 @@ class AlertAdapter(
         holder.timeText.text = formatTimestamp(item.control_st_tm)
 
         val iconRes = when {
-            item.control_desc.contains("공사") -> R.drawable.road
+            item.control_desc.contains("공사") -> R.drawable.construction
             item.control_desc.contains("통제") -> R.drawable.barrier
             item.control_desc.contains("침수") -> R.drawable.flood
             else -> R.drawable.ic_notification

@@ -246,7 +246,7 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         val uiSettings = naverMap.uiSettings
         uiSettings.isLocationButtonEnabled = true
         uiSettings.isZoomControlEnabled = true
-        uiSettings.isCompassEnabled = true
+        uiSettings.isCompassEnabled = false  // 나침반 비활성화
         uiSettings.isScaleBarEnabled = true
         
         // 위치 소스 설정

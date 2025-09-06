@@ -24,7 +24,26 @@ class RoadControlViewModel : ViewModel() {
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
 
+    // 캐시된 데이터 저장
+    private var cachedRoadControls: List<RoadControl>? = null
+    private var cachedFloodData: List<RoadControl>? = null
+    private var lastRoadControlLoadTime: Long = 0
+    private var lastFloodDataLoadTime: Long = 0
+    private val CACHE_DURATION = 30000L // 30초 캐시
+
     fun loadRoadControls() {
+
+        // 캐시된 데이터가 있고 30초 이내라면 캐시 사용
+        val currentTime = System.currentTimeMillis()
+        cachedRoadControls?.let { cached ->
+            if ((currentTime - lastRoadControlLoadTime) < CACHE_DURATION) {
+                Log.d("RoadControlViewModel", "캐시된 도로 통제 데이터 사용")
+                _roadControls.value = cached
+                return
+            }
+        }
+
+
         Log.d("RoadControlViewModel", "도로 통제 데이터 로드 시작")
         viewModelScope.launch {
             try {
@@ -40,7 +59,12 @@ class RoadControlViewModel : ViewModel() {
                         if (roadControlList.isNotEmpty()) {
                             Log.d("RoadControlViewModel", "첫 번째 도로 통제: ${roadControlList[0]}")
                         }
-                        
+
+                        // 캐시 업데이트
+                        cachedRoadControls = roadControlList
+                        lastRoadControlLoadTime = currentTime
+
+
                         _roadControls.value = roadControlList
                         Log.d("RoadControlViewModel", "도로 통제 데이터 로드 완료")
                     },
