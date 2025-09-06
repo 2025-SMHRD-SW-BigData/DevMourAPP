@@ -40,9 +40,10 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:layout_marginBottom="32dp"
             app:cardCornerRadius="24dp"
-            app:cardElevation="4dp"
+            app:cardElevation="6dp"
             app:cardBackgroundColor="@android:color/white">
 
             <LinearLayout
@@ -63,7 +64,7 @@
                     android:focusableInTouchMode="true"
                     android:clickable="true"
                     android:cursorVisible="true"
-                    android:hint="주소를 입력해주세요"
+                    android:hint="○○동을 입력해주세요"
                     android:imeOptions="actionSearch"
                     android:inputType="textVisiblePassword"
                     android:maxLines="1"
@@ -90,20 +91,24 @@
         </androidx.cardview.widget.CardView>
 
                  <!-- 지도 영역 -->
-         <fragment
-             android:id="@+id/map"
-             android:name="com.naver.maps.map.MapFragment"
-             android:layout_width="match_parent"
-             android:layout_height="179dp"
-             android:layout_marginBottom="24dp" />
 
-        <!-- 도로 상태 버튼 영역 -->
-        <LinearLayout
+            <!-- 도로 상태 버튼 영역 -->
+
+                         <fragment
+                 android:id="@+id/map"
+                 android:name="com.naver.maps.map.MapFragment"
+                 android:layout_width="match_parent"
+                 android:layout_height="208dp"
+                 android:layout_marginTop="-100dp"
+                 android:layout_marginBottom="20dp" />
+
+            <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="2"
-            android:layout_marginBottom="24dp">
+            android:layout_marginTop="-10dp"
+            android:layout_marginBottom="1dp">
 
             <!-- 도로 침수 -->
             <com.google.android.material.card.MaterialCardView
@@ -121,19 +126,19 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/background"
+                    android:background="@drawable/button_category_selector"
                     android:elevation="2dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
                     android:translationZ="2dp">
 
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:src="@drawable/road_water"
-                        android:scaleType="centerInside"
                         android:adjustViewBounds="true"
-                        android:contentDescription="@string/app_name" />
+                        android:contentDescription="@string/app_name"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/road_water" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -141,8 +146,8 @@
                         android:layout_marginTop="6dp"
                         android:text="도로 침수"
                         android:textColor="#1E2A44"
-                        android:textStyle="bold"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -156,26 +161,26 @@
                 android:layout_margin="6dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="8dp"
-                app:cardBackgroundColor="#ffffff"
+                app:cardBackgroundColor="#2f354f"
                 android:clickable="true"
                 android:focusable="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/background"
+                    android:background="@drawable/button_category_selector"
                     android:elevation="2dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
                     android:translationZ="2dp">
 
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:src="@drawable/roadcrack"
-                        android:scaleType="centerInside"
                         android:adjustViewBounds="true"
-                        android:padding="4dp" />
+                        android:padding="4dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/roadcrack" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -183,8 +188,8 @@
                         android:layout_marginTop="4dp"
                         android:text="도로 파손"
                         android:textColor="#1E2A44"
-                        android:textStyle="bold"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -196,7 +201,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="2"
-            android:layout_marginTop="0dp"
+            android:layout_marginTop="10dp"
             android:layout_marginBottom="16dp">
 
             <!-- 사진 촬영 -->
@@ -315,7 +320,7 @@
             android:id="@+id/btn_submit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="-10dp"
             android:clickable="true"
             android:focusable="true"
             app:cardCornerRadius="8dp"

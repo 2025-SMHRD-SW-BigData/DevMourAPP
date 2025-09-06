@@ -34,6 +34,7 @@ import com.example.devmour.data.LocationData
 import com.example.devmour.alert.MainActivityAlert
 import com.example.devmour.auth.LoginManager
 import com.example.devmour.auth.SessionManager
+import com.example.devmour.ReportActivity
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -69,6 +70,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var btnNotification: android.view.View
     private lateinit var btnMain: android.view.View
     private lateinit var btnReport: android.view.View
+    
+    // 네비게이션 바 아이콘들
+    private lateinit var ivNotification: android.widget.ImageView
+    private lateinit var ivMain: android.widget.ImageView
+    private lateinit var ivReport: android.widget.ImageView
     
     // 마커 리스트를 저장할 변수
     private val markers = mutableListOf<Marker>()
@@ -247,6 +253,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnMain = findViewById(R.id.btnMain)
         btnReport = findViewById(R.id.btnReport)
         
+        // 네비게이션 바 아이콘들 초기화
+        ivNotification = findViewById(R.id.ivNotification)
+        ivMain = findViewById(R.id.ivMain)
+        ivReport = findViewById(R.id.ivReport)
+        
         // GPS 위치 이동 버튼 초기화
         val btnGpsLocation = findViewById<android.widget.ImageButton>(R.id.btn_gps_location)
         
@@ -265,9 +276,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // 민원접수 버튼 클릭
         btnReport.setOnClickListener {
             try {
-                android.util.Log.d("MainActivity", "민원제보 버튼 클릭됨 - LoginActivity로 이동")
-                val intent = android.content.Intent(this, LoginActivity::class.java)
-                startActivity(intent)
+                android.util.Log.d("MainActivity", "민원제보 버튼 클릭됨")
+                
+                // 로그인 상태 확인
+                if (LoginManager.isLoggedIn(this)) {
+                    android.util.Log.d("MainActivity", "이미 로그인됨 - ReportActivity로 이동")
+                    val intent = android.content.Intent(this, ReportActivity::class.java)
+                    startActivity(intent)
+                } else {
+                    android.util.Log.d("MainActivity", "로그인 필요 - LoginActivity로 이동")
+                    val intent = android.content.Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                }
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "민원제보 버튼 클릭 오류: ${e.message}", e)
                 android.widget.Toast.makeText(this, "오류가 발생했습니다: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
@@ -351,6 +371,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 false
             }
         }
+        
+        // 메인화면이므로 메인 아이콘 활성화
+        setNavigationBarState("main")
     }
     
     // total_score를 기준으로 마커 아이콘을 결정하는 함수
@@ -825,14 +848,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             "구" -> {
                 marker.icon = MarkerIcons.BLUE
                 marker.iconTintColor = Color.BLUE
-                marker.width = 80
-                marker.height = 80
+                marker.width = 140
+                marker.height = 140
             }
             "동" -> {
                 marker.icon = MarkerIcons.GREEN
                 marker.iconTintColor = Color.GREEN
-                marker.width = 60
-                marker.height = 60
+                marker.width = 120
+                marker.height = 120
             }
         }
         
@@ -1311,6 +1334,81 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 앱이 정상 종료될 때 정리 작업 수행
         SessionManager.markCleanExit(this, true)
+    }
+    
+    private fun setNavigationBarState(currentPage: String) {
+        // 네비게이션 바 아이콘과 텍스트 색상 설정
+        when (currentPage) {
+            "main" -> {
+                // 메인화면 활성화
+                ivMain.setImageResource(R.drawable.main_b)
+                ivReport.setImageResource(R.drawable.report_w)
+                ivNotification.setImageResource(R.drawable.alarm_w)
+                
+                // 텍스트 색상 설정
+                (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+                (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#999999"))
+                    }
+                }
+                (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#999999"))
+                    }
+                }
+            }
+            "report" -> {
+                // 민원접수 활성화
+                ivMain.setImageResource(R.drawable.main_w)
+                ivReport.setImageResource(R.drawable.report_b)
+                ivNotification.setImageResource(R.drawable.alarm_w)
+                
+                // 텍스트 색상 설정
+                (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#999999"))
+                    }
+                }
+                (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+                (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#999999"))
+                    }
+                }
+            }
+            "notification" -> {
+                // 알림내역 활성화
+                ivMain.setImageResource(R.drawable.main_w)
+                ivReport.setImageResource(R.drawable.report_w)
+                ivNotification.setImageResource(R.drawable.alarm_b)
+                
+                // 텍스트 색상 설정
+                (btnMain as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#999999"))
+                    }
+                }
+                (btnReport as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#999999"))
+                    }
+                }
+                (btnNotification as android.widget.LinearLayout).getChildAt(1)?.let { textView ->
+                    if (textView is android.widget.TextView) {
+                        textView.setTextColor(Color.parseColor("#2f354f"))
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -37,13 +37,9 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true"
+            android:exported="false"
             android:windowSoftInputMode="stateAlwaysVisible|adjustNothing"
             android:launchMode="singleTop">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <!-- MainActivityAlert       -->
         <activity android:name=".alert.MainActivityAlert"
@@ -66,7 +62,7 @@
         <activity
             android:name=".SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.DevMour.NoActionBar">
+            android:theme="@style/Theme.DevMour">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

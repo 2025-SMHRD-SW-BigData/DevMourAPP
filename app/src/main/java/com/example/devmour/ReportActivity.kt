@@ -55,7 +55,7 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     
     private var selectedCategory = ""
     private val selectedImages = mutableListOf<Bitmap>()
-    private val maxImages = 3
+    private val maxImages = 1
     private lateinit var naverMap: NaverMap
     
     // 위치 관련 변수들
@@ -346,6 +346,88 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
             // 현재 페이지 (민원접수) - 아무 동작 안함
             Toast.makeText(this, "현재 민원접수 페이지입니다", Toast.LENGTH_SHORT).show()
         }
+        
+        // 도로 침수 버튼 클릭 이벤트
+        btnFlood.setOnClickListener {
+            Log.d("ReportActivity", "도로 침수 버튼 클릭됨")
+            selectCategory("flood")
+        }
+        
+        // 도로 파손 버튼 클릭 이벤트
+        btnBreak.setOnClickListener {
+            Log.d("ReportActivity", "도로 파손 버튼 클릭됨")
+            selectCategory("break")
+        }
+    }
+    
+    private fun selectCategory(category: String) {
+        Log.d("ReportActivity", "selectCategory 호출됨: $category")
+        selectedCategory = category
+        
+        // 모든 버튼을 기본 상태로 초기화
+        resetButtonStates()
+        
+        // 선택된 버튼만 활성화 상태로 변경
+        when (category) {
+            "flood" -> {
+                Log.d("ReportActivity", "도로 침수 버튼 선택됨")
+                val linearLayout = btnFlood.getChildAt(0) as? LinearLayout
+                if (linearLayout != null) {
+                    linearLayout.isSelected = true
+                    // TextView 색상 변경
+                    for (i in 0 until linearLayout.childCount) {
+                        val child = linearLayout.getChildAt(i)
+                        if (child is TextView) {
+                            child.setTextColor(Color.WHITE)
+                            break
+                        }
+                    }
+                }
+            }
+            "break" -> {
+                Log.d("ReportActivity", "도로 파손 버튼 선택됨")
+                val linearLayout = btnBreak.getChildAt(0) as? LinearLayout
+                if (linearLayout != null) {
+                    linearLayout.isSelected = true
+                    // TextView 색상 변경
+                    for (i in 0 until linearLayout.childCount) {
+                        val child = linearLayout.getChildAt(i)
+                        if (child is TextView) {
+                            child.setTextColor(Color.WHITE)
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun resetButtonStates() {
+        // 도로 침수 버튼을 기본 상태로
+        val floodLinearLayout = btnFlood.getChildAt(0) as? LinearLayout
+        if (floodLinearLayout != null) {
+            floodLinearLayout.isSelected = false
+            for (i in 0 until floodLinearLayout.childCount) {
+                val child = floodLinearLayout.getChildAt(i)
+                if (child is TextView) {
+                    child.setTextColor(Color.parseColor("#1E2A44"))
+                    break
+                }
+            }
+        }
+        
+        // 도로 파손 버튼을 기본 상태로
+        val breakLinearLayout = btnBreak.getChildAt(0) as? LinearLayout
+        if (breakLinearLayout != null) {
+            breakLinearLayout.isSelected = false
+            for (i in 0 until breakLinearLayout.childCount) {
+                val child = breakLinearLayout.getChildAt(i)
+                if (child is TextView) {
+                    child.setTextColor(Color.parseColor("#1E2A44"))
+                    break
+                }
+            }
+        }
     }
     
     private fun setupClickListeners() {
@@ -516,20 +598,26 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         // 선택된 이미지들 표시
         selectedImages.forEachIndexed { index, bitmap ->
             val frameLayout = FrameLayout(this)
-            frameLayout.layoutParams = LinearLayout.LayoutParams(100, 120).apply {
-                marginEnd = 8
+            val dp100 = (100 * resources.displayMetrics.density).toInt()
+            val dp120 = (120 * resources.displayMetrics.density).toInt()
+            val dp8 = (8 * resources.displayMetrics.density).toInt()
+            val dp4 = (4 * resources.displayMetrics.density).toInt()
+            
+            frameLayout.layoutParams = LinearLayout.LayoutParams(dp100, dp120).apply {
+                marginEnd = dp8
             }
+            frameLayout.setBackgroundResource(R.drawable.edittext_background)
+            frameLayout.elevation = 2f
+            frameLayout.translationZ = 2f
             
             val imageView = ImageView(this)
             imageView.setImageBitmap(bitmap)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-            imageView.layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            imageView.setBackgroundResource(R.drawable.edittext_background)
-            imageView.elevation = 2f
-            imageView.translationZ = 2f
+            imageView.layoutParams = FrameLayout.LayoutParams(dp100, dp120)
+            imageView.setPadding(dp4, dp4, dp4, dp4)
+            imageView.adjustViewBounds = false
+            imageView.maxWidth = dp100
+            imageView.maxHeight = dp120
             
             // 삭제 버튼
             val deleteButton = TextView(this)
@@ -653,25 +741,19 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
                 
                 Log.d("ReportActivity", "RequestBody 생성 완료")
                 
-                // 이미지 파일들을 MultipartBody.Part로 변환
-                val fileParts = mutableListOf<MultipartBody.Part?>()
+                // 이미지 파일을 MultipartBody.Part로 변환 (최대 1개)
+                var filePart1: MultipartBody.Part? = null
                 
-                selectedImages.forEachIndexed { index, bitmap ->
-                    Log.d("ReportActivity", "이미지 ${index + 1} 처리 시작...")
-                    val file = createImageFile(bitmap, index)
+                if (selectedImages.isNotEmpty()) {
+                    Log.d("ReportActivity", "이미지 처리 시작...")
+                    val file = createImageFile(selectedImages[0], 0)
                     Log.d("ReportActivity", "이미지 파일 생성: ${file.absolutePath}")
                     val requestFile = file.asRequestBody("image/jpeg".toMediaType())
-                    val part = MultipartBody.Part.createFormData("c_report_file${index + 1}", file.name, requestFile)
-                    fileParts.add(part)
-                    Log.d("ReportActivity", "이미지 ${index + 1} MultipartBody.Part 생성 완료")
+                    filePart1 = MultipartBody.Part.createFormData("c_report_file1", file.name, requestFile)
+                    Log.d("ReportActivity", "이미지 MultipartBody.Part 생성 완료")
                 }
                 
-                // 최대 3개까지 파일 파트 생성 (없는 경우 null)
-                while (fileParts.size < 3) {
-                    fileParts.add(null)
-                }
-                
-                Log.d("ReportActivity", "총 파일 파트 수: ${fileParts.size}")
+                Log.d("ReportActivity", "파일 파트 생성 완료")
                 Log.d("ReportActivity", "API 호출 시작...")
                 
                 // API 호출
@@ -682,9 +764,9 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
                     lonBody,
                     nameBody,
                     phoneBody,
-                    fileParts[0],
-                    fileParts[1],
-                    fileParts[2]
+                    filePart1,
+                    null,
+                    null
                 )
                 
                 Log.d("ReportActivity", "API 호출 완료")
@@ -789,14 +871,14 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
             "구" -> {
                 marker.icon = MarkerIcons.BLUE
                 marker.iconTintColor = Color.BLUE
-                marker.width = 80
-                marker.height = 80
+                marker.width = 140
+                marker.height = 140
             }
             "동" -> {
                 marker.icon = MarkerIcons.GREEN
                 marker.iconTintColor = Color.GREEN
-                marker.width = 60
-                marker.height = 60
+                marker.width = 120
+                marker.height = 120
             }
         }
         
