@@ -40,6 +40,9 @@ import com.example.devmour.data.LocationData
 import com.example.devmour.auth.LoginManager
 import com.example.devmour.auth.SessionManager
 import com.example.devmour.alert.MainActivityAlert
+import com.example.devmour.data.AddressSearchResult
+import com.example.devmour.viewmodel.GeocodingViewModel
+import androidx.lifecycle.ViewModelProvider
 
 class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     
@@ -69,6 +72,9 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     private val locationMarkers = mutableListOf<Marker>() // 위치 검색 마커
     private var selectedLocation: LocationData? = null // 선택된 위치 정보
     private var isLocationConfirmed = false // 위치 확정 여부
+    
+    // Geocoding ViewModel
+    private lateinit var geocodingViewModel: GeocodingViewModel
     
     // 광주시 위치 데이터 (하드코딩) - 실제 좌표 사용
     private val gwangjuLocations = listOf(
@@ -200,7 +206,7 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
     )
     
     // 서버 설정
-    private val SERVER_URL = "http://192.168.219.53:3000" // 실제 기기용 PC IP
+    private val SERVER_URL = "http://175.45.194.114:3001" // 실제 기기용 PC IP
     // 실제 기기 사용 시: "http://[컴퓨터IP]:3000"
     
     companion object {
@@ -227,6 +233,10 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         setupClickListeners()
         initLocation()
         initMap()
+        
+        // Geocoding ViewModel 초기화
+        geocodingViewModel = ViewModelProvider(this)[GeocodingViewModel::class.java]
+        observeGeocoding()
     }
     
     private fun initLocation() {
@@ -257,6 +267,9 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         
         // 현재 위치 가져오기
         getCurrentLocation()
+        
+        // 내 위치 버튼 클릭 리스너 설정
+        setupMyLocationButton()
     }
     
     private fun getCurrentLocation() {
@@ -435,16 +448,24 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         btnSearch.setOnClickListener {
             val address = etAddress.text.toString().trim()
             if (address.isNotEmpty()) {
-                val searchResults = searchLocations(address)
-                if (searchResults.isNotEmpty()) {
-                    // 첫 번째 검색 결과로 이동
-                    moveToLocation(searchResults.first())
-                    Toast.makeText(this, "${searchResults.first().name}으로 이동했습니다", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "검색 결과가 없습니다", Toast.LENGTH_SHORT).show()
-                }
+                // API 우선 검색 시작
+                geocodingViewModel.searchAddress(address)
+                // 검색 완료 후 키보드 숨기기
+                val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.hideSoftInputFromWindow(etAddress.windowToken, 0)
+                etAddress.clearFocus()
             } else {
-                Toast.makeText(this, "주소를 입력해주세요", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "검색어를 입력해주세요", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        // 엔터키로 검색
+        etAddress.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                btnSearch.performClick()
+                true
+            } else {
+                false
             }
         }
         
@@ -774,6 +795,10 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
                 Log.d("ReportActivity", "응답 메시지: ${response.message()}")
                 Log.d("ReportActivity", "응답 성공 여부: ${response.isSuccessful}")
                 
+                // 원시 응답 본문 로그 출력
+                val responseBody = response.errorBody()?.string() ?: response.body()?.toString()
+                Log.d("ReportActivity", "원시 응답 본문: $responseBody")
+                
                 withContext(Dispatchers.Main) {
                     try {
                         if (response.isSuccessful) {
@@ -907,11 +932,241 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
         locationMarkers.clear()
     }
     
+    // Geocoding Observer 설정
+    private fun observeGeocoding() {
+        Log.d("ReportActivity", "=== Geocoding Observer 설정 시작 ===")
+
+        geocodingViewModel.searchResult.observe(this) { searchResult ->
+            searchResult?.let { result ->
+                Log.d("ReportActivity", "주소 검색 결과: ${result.address} -> ${result.latitude}, ${result.longitude}")
+
+                // 검색된 위치로 이동
+                moveToSearchedLocation(result)
+
+                Toast.makeText(this,
+                    "${result.address}로 이동했습니다",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        geocodingViewModel.error.observe(this) { errorMessage ->
+            errorMessage?.let {
+                Log.e("ReportActivity", "API 주소 검색 실패: $it")
+
+                // API 검색 실패 시 로컬 검색으로 fallback
+                performLocalSearch()
+            }
+        }
+
+        geocodingViewModel.isLoading.observe(this) { isLoading ->
+            Log.d("ReportActivity", "주소 검색 로딩 상태: $isLoading")
+            // 로딩 인디케이터 표시/숨김 처리 가능
+        }
+    }
+    
+    // 로컬 검색을 수행하는 별도 함수 추가
+    private fun performLocalSearch() {
+        val searchQuery = etAddress.text.toString().trim()
+
+        if (searchQuery.isNotEmpty()) {
+            val localResults = searchLocations(searchQuery)
+            if (localResults.isNotEmpty()) {
+                // 로컬 검색 결과가 있으면 첫 번째 결과로 이동
+                moveToLocation(localResults.first())
+                Toast.makeText(this,
+                    "로컬 검색: ${localResults.first().name}으로 이동했습니다",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                // 로컬 검색 결과도 없으면 에러 메시지
+                Toast.makeText(this,
+                    "검색 결과가 없습니다",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+    
+    // API 검색 결과로 이동
+    private fun moveToSearchedLocation(searchResult: AddressSearchResult) {
+        // 기존 위치 마커들 제거
+        clearLocationMarkers()
+
+        // 새로운 위치 마커 추가
+        val marker = com.naver.maps.map.overlay.Marker()
+        marker.position = com.naver.maps.geometry.LatLng(searchResult.latitude, searchResult.longitude)
+        marker.map = naverMap
+
+        // 검색된 주소 마커 스타일 설정
+        marker.icon = com.naver.maps.map.util.MarkerIcons.RED
+        marker.iconTintColor = android.graphics.Color.RED
+        marker.width = 140
+        marker.height = 140
+        marker.captionText = searchResult.address
+
+        marker.tag = "SEARCHED_LOCATION"
+
+        // 마커 클릭 이벤트 - 위치 등록 다이얼로그 표시
+        marker.setOnClickListener { _ ->
+            showLocationConfirmDialog(LocationData(
+                searchResult.address,
+                searchResult.latitude,
+                searchResult.longitude,
+                "검색",
+                null
+            ))
+            true
+        }
+
+        locationMarkers.add(marker)
+
+        // 카메라를 해당 위치로 이동
+        val cameraPosition = com.naver.maps.map.CameraPosition(
+            com.naver.maps.geometry.LatLng(searchResult.latitude, searchResult.longitude),
+            16.0,
+            0.0,
+            0.0
+        )
+        naverMap.moveCamera(com.naver.maps.map.CameraUpdate.scrollTo(cameraPosition.target))
+
+        // 위치는 마커 클릭 시 확정되도록 함 (자동 확정 제거)
+
+        Log.d("ReportActivity", "API 검색된 위치로 이동: ${searchResult.address} (${searchResult.latitude}, ${searchResult.longitude})")
+    }
+    
+    // 내 위치 버튼 설정
+    private fun setupMyLocationButton() {
+        // 내 위치 버튼 활성화
+        naverMap.uiSettings.isLocationButtonEnabled = true
+        
+        // 지도 클릭 리스너 설정
+        naverMap.setOnMapClickListener { point, coord ->
+            // 현재 위치 근처를 클릭했는지 확인
+            if (isNearCurrentLocation(coord.latitude, coord.longitude)) {
+                // 현재 위치 마커 표시
+                showCurrentLocationMarker(coord.latitude, coord.longitude)
+            }
+        }
+    }
+    
+    // 현재 위치 가져오기 (마커 포함)
+    private fun getCurrentLocationWithMarker() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    val latitude = location.latitude
+                    val longitude = location.longitude
+                    
+                    // 기존 위치 마커들 제거
+                    clearLocationMarkers()
+                    
+                    // 현재 위치 마커 추가
+                    val marker = com.naver.maps.map.overlay.Marker()
+                    marker.position = com.naver.maps.geometry.LatLng(latitude, longitude)
+                    marker.map = naverMap
+                    
+                    // 현재 위치 마커 스타일 설정
+                    marker.icon = com.naver.maps.map.util.MarkerIcons.BLUE
+                    marker.iconTintColor = android.graphics.Color.BLUE
+                    marker.width = 140
+                    marker.height = 140
+                    marker.captionText = "현재 위치"
+                    
+                    marker.tag = "CURRENT_LOCATION"
+                    
+                    // 마커 클릭 이벤트 - 위치 등록 다이얼로그 표시
+                    marker.setOnClickListener { _ ->
+                        showLocationConfirmDialog(LocationData(
+                            "현재 위치",
+                            latitude,
+                            longitude,
+                            "현재위치",
+                            null
+                        ))
+                        true
+                    }
+                    
+                    locationMarkers.add(marker)
+                    
+                    // 현재 위치로 카메라 이동
+                    val currentLocation = com.naver.maps.geometry.LatLng(latitude, longitude)
+                    val cameraUpdate = com.naver.maps.map.CameraUpdate.scrollTo(currentLocation)
+                    naverMap.moveCamera(cameraUpdate)
+                    
+                    Log.d("ReportActivity", "현재 위치 마커 추가: $latitude, $longitude")
+                } else {
+                    Toast.makeText(this, "현재 위치를 가져올 수 없습니다", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(this, "위치 권한이 필요합니다", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    // 현재 위치 근처인지 확인
+    private fun isNearCurrentLocation(lat: Double, lng: Double): Boolean {
+        if (currentLatitude == 0.0 || currentLongitude == 0.0) return false
+        
+        val distance = calculateDistance(currentLatitude, currentLongitude, lat, lng)
+        return distance < 100 // 100미터 이내
+    }
+    
+    // 두 좌표 간의 거리 계산 (미터)
+    private fun calculateDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+        val earthRadius = 6371000.0 // 지구 반지름 (미터)
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLng = Math.toRadians(lng2 - lng1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return earthRadius * c
+    }
+    
+    // 현재 위치 마커 표시
+    private fun showCurrentLocationMarker(latitude: Double, longitude: Double) {
+        // 기존 위치 마커들 제거
+        clearLocationMarkers()
+        
+        // 현재 위치 마커 추가
+        val marker = com.naver.maps.map.overlay.Marker()
+        marker.position = com.naver.maps.geometry.LatLng(latitude, longitude)
+        marker.map = naverMap
+        
+        // 현재 위치 마커 스타일 설정
+        marker.icon = com.naver.maps.map.util.MarkerIcons.BLUE
+        marker.iconTintColor = android.graphics.Color.BLUE
+        marker.width = 140
+        marker.height = 140
+        marker.captionText = "현재 위치"
+        
+        marker.tag = "CURRENT_LOCATION"
+        
+        // 마커 클릭 이벤트 - 위치 등록 다이얼로그 표시
+        marker.setOnClickListener { _ ->
+            showLocationConfirmDialog(LocationData(
+                "현재 위치",
+                latitude,
+                longitude,
+                "현재위치",
+                null
+            ))
+            true
+        }
+        
+        locationMarkers.add(marker)
+        
+        Log.d("ReportActivity", "현재 위치 마커 표시: $latitude, $longitude")
+    }
+    
     // 위치 확정 다이얼로그 표시
     private fun showLocationConfirmDialog(location: LocationData) {
         val message = when (location.type) {
             "구" -> "🏛️ ${location.name}\n\n위치: ${location.latitude}, ${location.longitude}\n\n이 위치를 민원 제출 위치로 등록하시겠습니까?"
             "동" -> "🏘️ ${location.name}\n📍 소속: ${location.parent}\n\n위치: ${location.latitude}, ${location.longitude}\n\n이 위치를 민원 제출 위치로 등록하시겠습니까?"
+            "검색" -> "🔍 ${location.name}\n\n위치: ${location.latitude}, ${location.longitude}\n\n이 위치를 민원 제출 위치로 등록하시겠습니까?"
+            "현재위치" -> "📍 ${location.name}\n\n위치: ${location.latitude}, ${location.longitude}\n\n이 위치를 민원 제출 위치로 등록하시겠습니까?"
             else -> "${location.name}\n\n위치: ${location.latitude}, ${location.longitude}\n\n이 위치를 민원 제출 위치로 등록하시겠습니까?"
         }
         

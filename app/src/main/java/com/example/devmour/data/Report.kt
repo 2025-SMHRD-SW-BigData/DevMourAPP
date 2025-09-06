@@ -20,7 +20,7 @@ data class ReportResponse(
 
 data class ReportData(
     val reportId: Int,
-    val addr: String?,
+    val addr: Any?, // String 또는 객체일 수 있음
     val c_report_detail: String,
     val files: Map<String, String?>
 )

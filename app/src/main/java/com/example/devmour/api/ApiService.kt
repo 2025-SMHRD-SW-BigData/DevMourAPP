@@ -24,7 +24,7 @@ interface ApiService {
     suspend fun getFloodData(): ApiResponse<RoadControl>
     
     @Multipart
-    @POST("api/reports/submit")
+    @POST("api/mobile/reports/submit")
     suspend fun submitReport(
         @Part("addr") addr: RequestBody,
         @Part("c_report_detail") cReportDetail: RequestBody,
