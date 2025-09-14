@@ -41,7 +41,7 @@ Kotlin, AWS S3, Naver Maps
 # 프로젝트 아키텍쳐
 
 # 시연영상
-youtube.com/watch?si=M73OB3VOOP5eas6v&v=o9kYfwejQRQ&feature=youtu.be
+(youtube.com/watch?si=M73OB3VOOP5eas6v&v=o9kYfwejQRQ&feature=youtu.be)
 
 # 최종발표자료
-https://www.canva.com/design/DAGyomBQRs0/4u21qiH1jrva4l-i-febYQ/edit?utm_content=DAGyomBQRs0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+(https://www.canva.com/design/DAGyomBQRs0/4u21qiH1jrva4l-i-febYQ/edit?utm_content=DAGyomBQRs0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
