@@ -39,7 +39,7 @@ Kotlin, AWS S3, Naver Maps
     + 제보된 이미지를 바탕으로 관리자가 AI 도로파손 분석
       
 # 프로젝트 아키텍쳐
-![프로젝트 아키텍처]([https://raw.githubusercontent.com/2025-SMHRD-SW-BigData/DevMour/refs/heads/master/devmour%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?token=GHSAT0AAAAAADKKYC3ODCGSVT3HQOHDWCTW2GCIJUQ](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/devmour%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?raw=true))
+![아키텍처](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?raw=true)
 
 # 시연영상
 [(youtube.com/watch?si=M73OB3VOOP5eas6v&v=o9kYfwejQRQ&feature=youtu.be)](https://youtu.be/o9kYfwejQRQ?si=WDLiOwnDlKwgbQJR)
