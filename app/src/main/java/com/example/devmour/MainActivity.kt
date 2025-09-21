@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     // 실시간 위치 표시를 위한 변수들
     private var currentLocationMarker: Marker? = null
     private var locationUpdateHandler: android.os.Handler? = null
+<<<<<<< HEAD
     private val LOCATION_UPDATE_INTERVAL = 15000L // 15초마다 위치 업데이트 (Google Play Services 권장)
     
     // 위험 구역 감지를 위한 변수들
@@ -1193,6 +1194,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
             // 실시간 위치 업데이트 요청 (더 정확한 위치)
             try {
+<<<<<<< HEAD
                 val locationRequest = com.google.android.gms.location.LocationRequest.Builder(15000) // 15초마다 (Google Play Services 권장)
                     .setPriority(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY)
                     .build()

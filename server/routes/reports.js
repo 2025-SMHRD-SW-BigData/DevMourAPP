@@ -74,6 +74,7 @@ router.post('/submit', upload.fields([
             });
         }
         
+<<<<<<< HEAD
         // 클라이언트에서 전송된 이미지 URL 처리
         const files = req.files;
         const fileUrls = {

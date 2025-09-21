@@ -66,7 +66,7 @@ class MainActivityAlert : AppCompatActivity() {
 
     private val handler = Handler(Looper.getMainLooper())
     private val pollingInterval = 5000L // 5초
-    private var lastRequestTime: String? = null // 마지막 요청 시간 추적 (첫 요청시 null) 
+    private var lastRequestTime: String? = null // 마지막 요청 시간 추적 (첫 요청시 null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -205,7 +205,6 @@ class MainActivityAlert : AppCompatActivity() {
                             
                             // 마지막 요청 시간 업데이트 (안드로이드 친화적 형식)
                             lastRequestTime = response.lastRequestTime ?: lastRequestTime
-                            
                             val controlTimeMillis = try {
                                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.KOREA)
                                     .parse(control.control_st_tm)?.time ?: System.currentTimeMillis()

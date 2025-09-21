@@ -669,6 +669,7 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
             photoContainer.addView(frameLayout)
         }
         
+<<<<<<< HEAD
         // 이미지가 없을 때는 원래 안내 텍스트 표시
         if (selectedImages.isEmpty()) {
             val placeholder = FrameLayout(this)
@@ -907,7 +908,6 @@ class ReportActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
     private fun createImageFile(bitmap: Bitmap, index: Int): File {
         val file = File(cacheDir, "image_${index + 1}_${System.currentTimeMillis()}.jpg")
         val outputStream = FileOutputStream(file)
