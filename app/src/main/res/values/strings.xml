@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">도로시(SEE)</string>
+    <string name="kakao_app_key">http://kakaobb348933b27cba1d726cf4e152588cb0//oauth</string>
+    <string name="scheme_kakao_app_key">kakao${bb348933b27cba1d726cf4e152588cb0}</string>
+    <string name="naver_client_id">2zTcXI0_lYuvpxRezRfa</string>
+    <string name="naver_client_secret">_hSZWDkwBc</string>
+    <string name="google_client_id">1072030139519-tbhh08cmk3v6r3u5jsk1296177tftfkd.apps.googleusercontent.com</string>
+</resources>
